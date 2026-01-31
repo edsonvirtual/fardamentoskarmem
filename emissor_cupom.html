@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emissor de Cupom Fiscal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilos específicos para a simulação do papel térmico */
+        #receipt-content {
+            width: 80mm;
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            padding: 10px;
+            box-sizing: border-box; /* Garante que o padding não aumente a largura total */
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 12px;
+            line-height: 1.2;
+            color: #000;
+        }
+
+        .receipt-line {
+            border-bottom: 1px dashed #000;
+            margin: 5px 0;
+        }
+
+        /* Configurações de Impressão */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #receipt-content, #receipt-content * {
+                visibility: visible;
+            }
+            #receipt-content {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 80mm; /* Largura padrão de impressora térmica */
+                margin: 0;
+                padding: 5mm;
+            }
+            @page {
+                margin: 0;
+                size: auto;
+            }
+        }
+
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            word-break: break-all; /* Evita que nomes longos quebrem o layout */
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        <!-- Formulário de Entrada -->
+        <div class="bg-white p-6 rounded-lg shadow-md no-print">
+            <h2 class="text-xl font-bold mb-4 text-gray-800 border-b pb-2">Novo Cupom</h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Empresa</label>
+                    <input type="text" id="store-name" value="MINHA LOJA LTDA" class="mt-1 block w-full border rounded-md p-2">
+                </div>
+                
+                <div class="flex gap-2">
+                    <div class="flex-1">
+                        <label class="block text-sm font-medium text-gray-700">Produto</label>
+                        <input type="text" id="item-name" placeholder="Nome do item" class="mt-1 block w-full border rounded-md p-2">
+                    </div>
+                    <div class="w-20">
+                        <label class="block text-sm font-medium text-gray-700">Qtd</label>
+                        <input type="number" id="item-qty" value="1" min="1" class="mt-1 block w-full border rounded-md p-2">
+                    </div>
+                    <div class="w-24">
+                        <label class="block text-sm font-medium text-gray-700">Preço</label>
+                        <input type="number" id="item-price" step="0.01" placeholder="0.00" class="mt-1 block w-full border rounded-md p-2">
+                    </div>
+                </div>
+                
+                <button onclick="addItem()" class="w-full bg-blue-600 text-white font-bold py-2 rounded-md hover:bg-blue-700 transition">
+                    Adicionar Item
+                </button>
+
+                <div class="mt-6 border-t pt-4">
+                    <button onclick="generateReceipt()" class="w-full bg-green-600 text-white font-bold py-3 rounded-md hover:bg-green-700 transition mb-2">
+                        Gerar e Imprimir
+                    </button>
+                    <button onclick="clearCurrent()" class="w-full bg-red-100 text-red-700 font-bold py-2 rounded-md hover:bg-red-200 transition">
+                        Limpar Atual
+                    </button>
+                </div>
+            </div>
+
+            <!-- Histórico de Reimpressão -->
+            <div class="mt-8">
+                <h3 class="font-bold text-gray-700 mb-2">Reimprimir Recentes:</h3>
+                <div id="history-list" class="space-y-2">
+                    <!-- Histórico será inserido aqui -->
+                    <p class="text-sm text-gray-500 italic">Nenhum cupom gerado ainda.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview do Cupom -->
+        <div class="flex flex-col items-center">
+            <h2 class="text-lg font-bold mb-4 text-gray-600 no-print">Visualização (Papel 80mm)</h2>
+            <div id="receipt-content" class="shadow-xl border border-gray-200">
+                <div class="text-center font-bold text-lg" id="view-store-name">MINHA LOJA LTDA</div>
+                <div class="text-center text-xs">CNPJ: 00.000.000/0001-00</div>
+                <div class="text-center text-xs mb-2">Rua Exemplo, 123 - Cidade/UF</div>
+                
+                <div class="receipt-line"></div>
+                
+                <div class="flex justify-between font-bold mb-1 uppercase">
+                    <span class="w-1/2">Item</span>
+                    <span class="w-1/6 text-center">Qtd</span>
+                    <span class="w-1/3 text-right">Total</span>
+                </div>
+                
+                <div id="items-list" class="min-h-[100px]">
+                    <!-- Itens entram aqui -->
+                </div>
+                
+                <div class="receipt-line"></div>
+                
+                <div class="flex justify-between font-bold text-lg">
+                    <span>TOTAL R$</span>
+                    <span id="view-total">0,00</span>
+                </div>
+                
+                <div class="receipt-line"></div>
+                
+                <div class="text-center text-xs mt-4">
+                    <p>Data: <span id="view-date">--/--/----</span></p>
+                    <p>Hora: <span id="view-time">--:--:--</span></p>
+                    <p class="mt-2">OBRIGADO PELA PREFERENCIA!</p>
+                </div>
+            </div>
+            
+            <button onclick="window.print()" class="mt-6 no-print bg-gray-800 text-white px-6 py-2 rounded-full flex items-center gap-2 hover:bg-black">
+                <span>🖨️</span> Imprimir Agora
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let currentItems = [];
+        let history = [];
+
+        function addItem() {
+            const name = document.getElementById('item-name').value;
+            const qty = parseInt(document.getElementById('item-qty').value);
+            const price = parseFloat(document.getElementById('item-price').value);
+
+            if (!name || isNaN(qty) || isNaN(price)) {
+                showToast("Preencha os dados do produto!");
+                return;
+            }
+
+            currentItems.push({ name, qty, price, total: qty * price });
+            updatePreview();
+            
+            // Limpa campos
+            document.getElementById('item-name').value = '';
+            document.getElementById('item-price').value = '';
+            document.getElementById('item-qty').value = '1';
+            document.getElementById('item-name').focus();
+        }
+
+        function updatePreview() {
+            const list = document.getElementById('items-list');
+            const totalEl = document.getElementById('view-total');
+            const storeNameEl = document.getElementById('view-store-name');
+            
+            storeNameEl.innerText = document.getElementById('store-name').value;
+            
+            list.innerHTML = '';
+            let totalGeral = 0;
+
+            currentItems.forEach((item, index) => {
+                totalGeral += item.total;
+                const row = document.createElement('div');
+                row.className = 'item-row mb-1';
+                row.innerHTML = `
+                    <span class="w-1/2">${item.name.toUpperCase()}</span>
+                    <span class="w-1/6 text-center">${item.qty}</span>
+                    <span class="w-1/3 text-right">${item.total.toFixed(2)}</span>
+                `;
+                list.appendChild(row);
+            });
+
+            totalEl.innerText = totalGeral.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+            
+            const now = new Date();
+            document.getElementById('view-date').innerText = now.toLocaleDateString('pt-BR');
+            document.getElementById('view-time').innerText = now.toLocaleTimeString('pt-BR');
+        }
+
+        function generateReceipt() {
+            if (currentItems.length === 0) {
+                showToast("Adicione pelo menos um item!");
+                return;
+            }
+
+            // Salva no histórico antes de imprimir
+            const receiptData = {
+                store: document.getElementById('store-name').value,
+                items: [...currentItems],
+                total: document.getElementById('view-total').innerText,
+                timestamp: new Date().toLocaleString('pt-BR')
+            };
+
+            history.unshift(receiptData);
+            if (history.length > 5) history.pop(); // Mantém apenas os últimos 5
+            
+            renderHistory();
+            window.print();
+        }
+
+        function renderHistory() {
+            const histList = document.getElementById('history-list');
+            histList.innerHTML = '';
+
+            if (history.length === 0) {
+                histList.innerHTML = '<p class="text-sm text-gray-500 italic">Nenhum cupom gerado ainda.</p>';
+                return;
+            }
+
+            history.forEach((data, index) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-2 border rounded hover:bg-blue-50 text-xs flex justify-between items-center group";
+                btn.onclick = () => reprint(index);
+                btn.innerHTML = `
+                    <span>
+                        <strong>#${history.length - index}</strong> - ${data.timestamp}<br>
+                        <span class="text-gray-500">Total: R$ ${data.total}</span>
+                    </span>
+                    <span class="text-blue-600 font-bold opacity-0 group-hover:opacity-100 transition">REIMPRIMIR</span>
+                `;
+                histList.appendChild(btn);
+            });
+        }
+
+        function reprint(index) {
+            const data = history[index];
+            currentItems = [...data.items];
+            document.getElementById('store-name').value = data.store;
+            
+            updatePreview();
+            
+            // Pequeno delay para garantir que o DOM atualizou antes do print
+            setTimeout(() => {
+                window.print();
+            }, 100);
+        }
+
+        function clearCurrent() {
+            currentItems = [];
+            updatePreview();
+        }
+
+        function showToast(msg) {
+            const toast = document.createElement('div');
+            toast.className = "fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-2 rounded shadow-lg transition-opacity duration-500";
+            toast.innerText = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 500);
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

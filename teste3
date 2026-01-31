@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Karmem Fardamentos | Gestão de Excelência</title>
+    
+    <!-- Bibliotecas de Estilo e Ícones -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Biblioteca para Geração de PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700&display=swap');
+
+        :root { 
+            --primary: #6a0dad; 
+            --secondary: #4f46e5; 
+            --danger: #dc3545; 
+            --success: #198754; 
+            --text-dark: #1e293b;
+            --bg-light: #f8fafc;
+        }
+
+        body { background-color: var(--bg-light); font-family: 'Inter', sans-serif; color: var(--text-dark); }
+        
+        /* Layout e Header */
+        .karmem-header { 
+            background: linear-gradient(135deg, var(--primary), var(--secondary)); 
+            color: white; padding: 1.8rem; margin-bottom: 30px; 
+            border-bottom-left-radius: 2.5rem; border-bottom-right-radius: 2.5rem;
+            box-shadow: 0 10px 25px -5px rgba(106, 13, 173, 0.2);
+        }
+        
+        .nav-pills .nav-link { color: #64748b; font-weight: 600; border-radius: 12px; margin: 0 5px; padding: 0.6rem 1.2rem; transition: all 0.2s; }
+        .nav-pills .nav-link:hover { background-color: #f1f5f9; color: var(--primary); }
+        .nav-pills .nav-link.active { background-color: var(--primary) !important; color: white !important; box-shadow: 0 4px 12px rgba(106, 13, 173, 0.15); }
+
+        /* Estilos de Componentes */
+        .card-product { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; border-radius: 20px; border: 1px solid #e2e8f0; background: white; overflow: hidden; }
+        .card-product:hover { transform: translateY(-6px); border-color: var(--primary); box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.08); }
+        
+        .glass-card { background: white; border-radius: 24px; border: 1px solid #e2e8f0; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        
+        .btn-brand { background: var(--primary); color: white; border-radius: 12px; font-weight: 700; transition: all 0.3s; border: none; }
+        .btn-brand:hover { background: #5a0b94; transform: translateY(-2px); color: white; box-shadow: 0 5px 15px rgba(106, 13, 173, 0.2); }
+
+        .status-badge { font-size: 0.7rem; padding: 6px 14px; border-radius: 50px; font-weight: 700; letter-spacing: 0.5px; }
+
+        /* Área de Impressão (Oculta no ecrã) */
+        #formal-print-area { display: none; }
+        @media print {
+            body * { visibility: hidden; }
+            #formal-print-area, #formal-print-area * { visibility: visible; display: block !important; }
+            #formal-print-area { position: absolute; left: 0; top: 0; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="karmem-header text-center no-print">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div style="width: 120px;" class="d-none d-md-block text-start">
+                <div class="bg-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                    <i class="bi bi-intersect text-primary fs-4"></i>
+                </div>
+            </div>
+            <div>
+                <h1 class="h2 fw-bold m-0" style="font-family: 'Playfair Display', serif; letter-spacing: -0.5px;">Karmem Fardamentos</h1>
+                <p class="small opacity-80 m-0 text-uppercase tracking-widest text-white font-semibold" style="font-size: 0.65rem;">Gestão Profissional de Atelier</p>
+            </div>
+            <div class="text-end" style="width: 120px;">
+                <div id="connection-status" class="status-badge bg-danger text-white shadow-sm">OFFLINE</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container pb-5 no-print">
+        <ul class="nav nav-pills mb-4 justify-content-center bg-white p-2 rounded-4 shadow-sm border">
+            <li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#tab-vendas"><i class="bi bi-shop me-2"></i>Vendas</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tab-orcamentos"><i class="bi bi-file-earmark-pdf me-2"></i>Orçamentos</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tab-estoque"><i class="bi bi-box-seam me-2"></i>Stock</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tab-clientes"><i class="bi bi-people me-2"></i>Clientes</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tab-relatorios"><i class="bi bi-graph-up me-2"></i>Relatórios</a></li>
+        </ul>
+
+        <div class="tab-content">
+            <!-- ABA VENDAS -->
+            <div class="tab-pane fade show active" id="tab-vendas">
+                <div class="row g-4">
+                    <div class="col-lg-8">
+                        <div class="glass-card h-100">
+                            <div class="input-group mb-4 shadow-sm rounded-pill overflow-hidden border">
+                                <span class="input-group-text bg-white border-0 ps-3 text-muted"><i class="bi bi-search"></i></span>
+                                <input type="text" id="search-pos" class="form-control border-0 py-3 shadow-none" placeholder="Procurar produto..." oninput="window.render()">
+                            </div>
+                            <div id="pos-grid" class="row g-3"></div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="glass-card sticky-top border-2 border-primary border-opacity-10" style="top: 20px;">
+                            <h5 class="fw-bold mb-4 text-primary border-bottom pb-2">Novo Carrinho</h5>
+                            <label class="small fw-bold text-muted mb-1">Cliente</label>
+                            <select id="client-select-pos" class="form-select mb-3 shadow-sm py-2 rounded-3 border-light"></select>
+                            
+                            <label class="small fw-bold text-muted mb-1">Pagamento</label>
+                            <select id="payment-method-pos" class="form-select mb-3 shadow-sm py-2 rounded-3 border-light">
+                                <option value="Dinheiro">💵 Dinheiro</option>
+                                <option value="Transferência">📱 Transferência / PIX</option>
+                                <option value="Cartão">💳 Cartão de Débito/Crédito</option>
+                            </select>
+
+                            <label class="small fw-bold text-muted mb-1">Desconto</label>
+                            <div class="input-group mb-4 shadow-sm">
+                                <select id="discount-type" class="form-select border-light" style="max-width: 80px;" onchange="window.updateCartUI()">
+                                    <option value="val">€</option><option value="per">%</option>
+                                </select>
+                                <input type="number" id="discount-input" class="form-control border-light" value="0" min="0" oninput="window.updateCartUI()">
+                            </div>
+
+                            <div id="cart-items" class="mb-4 small border-bottom pb-3 overflow-auto" style="min-height: 100px; max-height: 250px;"></div>
+                            
+                            <div class="pt-2">
+                                <div class="d-flex justify-content-between h3 fw-bold text-primary mt-2"><span>Total</span><span id="cart-total">0,00 €</span></div>
+                                <div class="d-grid gap-2 mt-4">
+                                    <button class="btn btn-brand py-3 shadow" id="btn-finish" disabled onclick="window.handleTransaction('sale')">FINALIZAR VENDA</button>
+                                    <button class="btn btn-outline-secondary py-2 border-2 rounded-3" id="btn-quote" disabled onclick="window.handleTransaction('quote')">CRIAR PROPOSTA</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA ORÇAMENTOS -->
+            <div class="tab-pane fade" id="tab-orcamentos">
+                <div class="glass-card">
+                    <h5 class="fw-bold mb-4 text-primary">Gestão de Propostas e Orçamentos</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Referência</th>
+                                    <th>Data</th>
+                                    <th>Cliente</th>
+                                    <th>Valor</th>
+                                    <th class="text-center">Estado</th>
+                                    <th class="text-center">Exportar</th>
+                                    <th class="text-end">Controlo</th>
+                                </tr>
+                            </thead>
+                            <tbody id="all-quotes-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- OUTRAS ABAS (STOCK, CLIENTES, RELATÓRIOS) -->
+            <div class="tab-pane fade" id="tab-estoque">
+                <div class="glass-card">
+                    <h5 class="fw-bold mb-4 text-primary">Inventário de Produtos</h5>
+                    <form id="form-product" class="row g-3 mb-4 bg-slate-50 p-4 rounded-4 border">
+                        <input type="hidden" id="p-id">
+                        <div class="col-md-5"><input type="text" id="p-name" class="form-control" placeholder="Nome do Produto" required></div>
+                        <div class="col-md-2"><select id="p-size" class="form-select"><option>P</option><option>M</option><option>G</option><option>GG</option><option>EG</option></select></div>
+                        <div class="col-md-2"><input type="number" id="p-price" class="form-control" step="0.01" placeholder="Preço (€)" required></div>
+                        <div class="col-md-2"><input type="number" id="p-stock" class="form-control" placeholder="Quantidade" required></div>
+                        <div class="col-md-1"><button type="submit" class="btn btn-brand w-100 py-2"><i class="bi bi-save"></i></button></div>
+                    </form>
+                    <table class="table table-hover align-middle"><tbody id="inventory-table"></tbody></table>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="tab-clientes">
+                <div class="glass-card">
+                    <h5 class="fw-bold mb-4 text-primary">Fichas de Clientes</h5>
+                    <form id="form-client" class="row g-3 mb-4 bg-slate-50 p-4 rounded-4 border">
+                        <input type="hidden" id="c-id">
+                        <div class="col-md-5"><input type="text" id="c-name" class="form-control" placeholder="Nome Completo / Empresa" required></div>
+                        <div class="col-md-5"><input type="text" id="c-phone" class="form-control" placeholder="Telemóvel"></div>
+                        <div class="col-md-2"><button type="submit" class="btn btn-brand w-100 py-2">Salvar</button></div>
+                    </form>
+                    <table class="table table-hover align-middle"><tbody id="clients-table"></tbody></table>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="tab-relatorios">
+                <div class="glass-card">
+                    <h5 class="fw-bold mb-4 text-primary">Análise por Cliente</h5>
+                    <select id="report-select-client" class="form-select mb-4 shadow-sm" onchange="window.renderHistory(this.value)"></select>
+                    <div id="report-content" class="p-4 border rounded-4 bg-slate-50 min-h-[200px]"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AREA PARA GERAR O PDF -->
+    <div id="formal-print-area"></div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        let db = { products: [], clients: [], sales: [], quotes: [] };
+        let cart = [];
+        let isOnline = false;
+
+        // COMUNICAÇÃO API
+        async function api(path, method = 'GET', body = null) {
+            try {
+                const options = { method, headers: { 'Content-Type': 'application/json' } };
+                if (body) options.body = JSON.stringify(body);
+                const res = await fetch(`${API_URL}${path}`, options);
+                const text = await res.text();
+                let data;
+                try { data = text ? JSON.parse(text) : null; } catch (e) { data = text; }
+                if (!res.ok) throw new Error(data.error || data.message || `Erro ${res.status}`);
+                updateStatus(true);
+                return data;
+            } catch (e) { updateStatus(false); throw e; }
+        }
+
+        function updateStatus(online) {
+            const badge = document.getElementById('connection-status');
+            isOnline = online;
+            badge.innerText = online ? 'LIGADO' : 'OFFLINE';
+            badge.className = `status-badge ${online ? 'bg-success text-white shadow-sm' : 'bg-danger text-white animate-pulse'}`;
+        }
+
+        async function loadAllData() {
+            try {
+                const [p, c, q] = await Promise.all([api('/products'), api('/clients'), api('/quotes')]);
+                db.products = p || []; db.clients = c || []; db.quotes = q || [];
+                window.render();
+            } catch (err) { updateStatus(false); }
+        }
+
+        window.render = () => {
+            const search = document.getElementById('search-pos').value.toLowerCase();
+            
+            // POS Grid
+            document.getElementById('pos-grid').innerHTML = db.products.filter(p => p.name.toLowerCase().includes(search) || p.size.toLowerCase().includes(search)).map(p => `
+                <div class="col-md-4">
+                    <div class="card card-product border-0 shadow-sm h-100 ${p.stock <= 0 ? 'opacity-50 grayscale' : ''}" onclick="${p.stock > 0 ? `window.addToCart(${p.id})` : ''}">
+                        <div class="card-body p-3">
+                            <span class="badge bg-primary bg-opacity-10 text-primary mb-2">${p.size}</span>
+                            <h6 class="fw-bold text-truncate m-0 text-slate-800">${p.name}</h6>
+                            <p class="text-primary fw-bold mt-2 mb-0">${parseFloat(p.price).toFixed(2)} €</p>
+                            <small class="text-muted" style="font-size: 0.7rem;">Stock: ${p.stock} un.</small>
+                        </div>
+                    </div>
+                </div>`).join('');
+
+            // Tabelas Técnicas
+            document.getElementById('inventory-table').innerHTML = db.products.map(p => `<tr><td><b>${p.name}</b> (${p.size})</td><td>${parseFloat(p.price).toFixed(2)} €</td><td><span class="badge ${p.stock <= 3 ? 'bg-danger' : 'bg-success'} bg-opacity-10 ${p.stock <= 3 ? 'text-danger' : 'text-success'}">${p.stock}</span></td><td class="text-end"><button onclick="window.editProd(${p.id})" class="btn btn-sm text-warning me-1"><i class="bi bi-pencil-square"></i></button><button onclick="window.deleteDoc('products', ${p.id})" class="btn btn-sm text-danger"><i class="bi bi-trash3"></i></button></td></tr>`).join('');
+            document.getElementById('clients-table').innerHTML = db.clients.map(c => `<tr><td><b>${c.name}</b></td><td>${c.phone || '-'}</td><td class="text-end"><button onclick="window.editCli(${c.id})" class="btn btn-sm btn-light border shadow-sm"><i class="bi bi-pencil"></i> Editar</button></td></tr>`).join('');
+            
+            // Tabela de Orçamentos com Novos Botões
+            document.getElementById('all-quotes-table').innerHTML = db.quotes.map(q => {
+                const total = q.total || q.total_amount || 0;
+                const status = q.status || 'Pendente';
+                let statusClass = 'bg-secondary';
+                if (status === 'Aprovado') statusClass = 'bg-success';
+                if (status === 'Recusado') statusClass = 'bg-danger';
+
+                return `
+                <tr>
+                    <td><span class="fw-bold text-slate-600">ORC-${q.id.toString().split('-').pop()}</span></td>
+                    <td><small>${q.date}</small></td>
+                    <td>${q.client_name || 'Particular'}</td>
+                    <td><b class="text-primary">${parseFloat(total).toFixed(2)} €</b></td>
+                    <td class="text-center">
+                        <span class="badge ${statusClass} bg-opacity-10 ${statusClass.replace('bg-', 'text-')}">${status}</span>
+                    </td>
+                    <td class="text-center">
+                        <button onclick="window.printFormalPDF('${q.id}')" class="btn btn-sm btn-outline-primary border-2 px-2" title="Baixar PDF Oficial">
+                            <i class="bi bi-file-earmark-pdf"></i>
+                        </button>
+                    </td>
+                    <td class="text-end">
+                        <div class="btn-group shadow-sm bg-white rounded-3 overflow-hidden border">
+                            <button onclick="window.updateQuoteStatus('${q.id}', 'Aprovado')" class="btn btn-sm btn-light text-success border-0 px-2" title="Aprovar"><i class="bi bi-check-circle"></i></button>
+                            <button onclick="window.updateQuoteStatus('${q.id}', 'Recusado')" class="btn btn-sm btn-light text-warning border-0 px-2" title="Recusar"><i class="bi bi-dash-circle"></i></button>
+                            <button onclick="window.loadQuoteForEdit('${q.id}')" class="btn btn-sm btn-light text-primary border-0 px-2" title="Editar Itens"><i class="bi bi-pencil"></i></button>
+                            <button onclick="window.deleteDoc('quotes', '${q.id}')" class="btn btn-sm btn-light text-danger border-0 px-2" title="Remover"><i class="bi bi-trash3"></i></button>
+                        </div>
+                    </td>
+                </tr>`}).join('');
+
+            const opts = '<option value="">Particular / Consumidor Final</option>' + db.clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            document.getElementById('client-select-pos').innerHTML = opts;
+            document.getElementById('report-select-client').innerHTML = '<option value="null">Consultar Vendas Avulsas</option>' + db.clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        }
+
+        window.addToCart = (id) => { 
+            const p = db.products.find(x => x.id == id);
+            const inCart = cart.find(x => x.id == id);
+            if (inCart) inCart.qty++; else cart.push({ ...p, qty: 1, price: parseFloat(p.price) });
+            window.updateCartUI(); 
+        };
+
+        window.updateCartUI = () => {
+            let subtotal = 0;
+            const dVal = parseFloat(document.getElementById('discount-input').value) || 0;
+            const dType = document.getElementById('discount-type').value;
+            document.getElementById('cart-items').innerHTML = cart.map((item, i) => {
+                subtotal += item.price * item.qty;
+                return `<div class="d-flex justify-content-between align-items-center mb-2 bg-slate-50 p-2 rounded-3 border">
+                    <span class="small"><b>${item.qty}x</b> ${item.name}</span>
+                    <button onclick="cart.splice(${i},1);window.updateCartUI()" class="btn btn-sm text-danger p-0"><i class="bi bi-x-circle-fill"></i></button>
+                </div>`;
+            }).join('') || '<p class="text-center py-4 text-slate-300 italic small">Carrinho vazio</p>';
+            let discount = (dType === 'per') ? subtotal * (dVal / 100) : dVal;
+            document.getElementById('cart-total').innerText = `${Math.max(0, subtotal - discount).toFixed(2)} €`;
+            document.getElementById('btn-finish').disabled = document.getElementById('btn-quote').disabled = cart.length === 0;
+        }
+
+        window.handleTransaction = async (type) => {
+            if (!isOnline) return alert("Erro: Sem ligação ao servidor.");
+            const cid = document.getElementById('client-select-pos').value;
+            const subtotal = cart.reduce((s, i) => s + (i.price * i.qty), 0);
+            const dVal = parseFloat(document.getElementById('discount-input').value) || 0;
+            const discount = (document.getElementById('discount-type').value === 'per') ? subtotal * (dVal / 100) : dVal;
+            const data = { id: (type==='sale'?'KF-':'ORC-') + Date.now().toString().slice(-5), client_id: cid===""?null:cid, paymentMethod: document.getElementById('payment-method-pos').value, subtotal, discount, total: subtotal - discount, items: cart, status: 'Pendente' };
+            try { await api(type==='sale'?'/sales':'/quotes', 'POST', data); alert("Operação efetuada com sucesso!"); cart = []; window.updateCartUI(); loadAllData(); } catch (e) { alert(e.message); }
+        }
+
+        window.updateQuoteStatus = async (id, newStatus) => {
+            try {
+                await api(`/quotes/${id}/status`, 'POST', { status: newStatus });
+                loadAllData();
+            } catch (e) { alert("Erro ao atualizar estado no servidor. Verifique o seu server.js."); }
+        }
+
+        // --- FUNÇÃO DE IMPRESSÃO PREMIUM ---
+        window.printFormalPDF = async (id) => {
+            const q = db.quotes.find(x => x.id == id);
+            if (!q) return alert("Erro: Proposta não encontrada!");
+
+            const client = db.clients.find(c => String(c.id) === String(q.client_id));
+            const clientName = client?.name || q.client_name || 'CLIENTE PARTICULAR';
+            const shortId = q.id.toString().split('-').pop();
+            const total = parseFloat(q.total || q.total_amount || 0);
+            const subtotal = parseFloat(q.subtotal || total);
+            const discount = parseFloat(q.discount || 0);
+
+            const pdfContent = `
+                <div style="font-family: 'Inter', sans-serif; padding: 25mm 20mm; color: #1e293b; background: #fff; height: 100%; box-sizing: border-box; position: relative;">
+                    <div style="position: absolute; top: 0; left: 0; width: 6px; height: 100%; background: #6a0dad;"></div>
+                    
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <h1 style="font-family: 'Playfair Display', serif; font-weight: 900; font-size: 32px; color: #6a0dad; margin: 0; letter-spacing: -1px; text-transform: uppercase;">Karmem Fardamentos</h1>
+                        <p style="margin: 5px 0 0 0; font-size: 11px; text-transform: uppercase; letter-spacing: 4px; color: #94a3b8; font-weight: 700;">Alta Confecção Profissional & Atelier</p>
+                    </div>
+
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; border: 1px solid #1e293b;">
+                        <tr>
+                            <td style="padding: 10px; border-right: 1px solid #1e293b; width: 40%;">
+                                <span style="font-weight: 800; text-transform: uppercase; font-size: 8px; color: #6a0dad; display: block; margin-bottom: 4px;">Informações do Cliente</span>
+                                <b style="font-size: 14px; font-family: 'Playfair Display', serif;">${clientName.toUpperCase()}</b>
+                                <p style="margin: 2px 0; font-size: 11px; color: #64748b;">Contacto: ${client?.phone || 'N/A'}</p>
+                            </td>
+                            <td style="padding: 10px; border-right: 1px solid #1e293b; width: 30%;">
+                                <span style="font-weight: 800; text-transform: uppercase; font-size: 8px; color: #6a0dad; display: block; margin-bottom: 4px;">Documento</span>
+                                <b style="font-size: 12px;">ORÇAMENTO Nº ${shortId}</b>
+                                <p style="margin: 2px 0; font-size: 11px; color: #64748b;">Emissão: ${q.date}</p>
+                            </td>
+                            <td style="padding: 10px; width: 30%;">
+                                <span style="font-weight: 800; text-transform: uppercase; font-size: 8px; color: #6a0dad; display: block; margin-bottom: 4px;">Emissor</span>
+                                <b style="font-size: 11px;">Karmem Fardamentos, Lda.</b>
+                                <p style="margin: 2px 0; font-size: 10px; color: #64748b;">Lisboa, Portugal</p>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+                        <thead>
+                            <tr style="background: #fcfcfc; border-top: 2px solid #1e293b; border-bottom: 2px solid #1e293b;">
+                                <th style="text-align: left; padding: 12px 10px; font-size: 10px; text-transform: uppercase; font-weight: 800;">Descrição Técnica do Artigo</th>
+                                <th style="text-align: center; padding: 12px 10px; font-size: 10px; text-transform: uppercase; width: 60px; font-weight: 800;">Qtd</th>
+                                <th style="text-align: right; padding: 12px 10px; font-size: 10px; text-transform: uppercase; width: 100px; font-weight: 800;">P. Unitário</th>
+                                <th style="text-align: right; padding: 12px 10px; font-size: 10px; text-transform: uppercase; width: 110px; font-weight: 800;">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${(q.items || []).map(i => {
+                                const pName = (i.product_name || i.name || "Item").toUpperCase();
+                                const price = i.price_unit || i.price || 0;
+                                const qty = i.quantity || i.qty || 0;
+                                return `<tr>
+                                    <td style="padding: 15px 10px; border-bottom: 1px solid #f1f5f9; font-size: 12px;"><b>${pName}</b></td>
+                                    <td style="padding: 15px 10px; border-bottom: 1px solid #f1f5f9; text-align: center; font-size: 12px;">${qty}</td>
+                                    <td style="padding: 15px 10px; border-bottom: 1px solid #f1f5f9; text-align: right; font-size: 12px;">${parseFloat(price).toFixed(2)} €</td>
+                                    <td style="padding: 15px 10px; border-bottom: 1px solid #f1f5f9; text-align: right; font-size: 12px; font-weight: 700;">${(qty * price).toFixed(2)} €</td>
+                                </tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>
+
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto;">
+                        <div style="width: 50%; font-size: 10px; color: #64748b; font-style: italic;">
+                            <b style="color: #1e293b; text-transform: uppercase; font-size: 8px; font-style: normal; display: block; margin-bottom: 5px;">Condições Gerais</b>
+                            • Validade: 7 dias úteis.<br>
+                            • Entrega: Sujeita a disponibilidade de stock ou agenda de confeção.<br>
+                            • Este documento não substitui a fatura fiscal final.<br>
+                            • Condições: 50% na adjudicação e 50% no ato da entrega.
+                        </div>
+                        <div style="width: 250px; background: #fdfcff; border: 1.5px solid #1e293b; padding: 15px; border-radius: 8px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 11px;">
+                                <span style="font-weight: 700; color: #94a3b8; text-transform: uppercase;">Subtotal Bruto</span>
+                                <span>${subtotal.toFixed(2)} €</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 11px; color: #dc3545;">
+                                <span style="font-weight: 700; text-transform: uppercase;">Benefício/Desconto</span>
+                                <span>- ${discount.toFixed(2)} €</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding-top: 10px; border-top: 1px solid #e2e8f0; font-weight: 900; font-size: 18px; color: #6a0dad; font-family: 'Playfair Display', serif;">
+                                <span style="font-size: 11px; align-self: center;">TOTAL</span>
+                                <span>${total.toFixed(2)} €</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 80px; margin-top: 60px; text-align: center;">
+                        <div style="border-top: 1px solid #cbd5e1; padding-top: 8px; font-size: 9px; font-weight: 800; text-transform: uppercase; color: #94a3b8; letter-spacing: 1.5px;">Responsável Karmem</div>
+                        <div style="border-top: 1px solid #cbd5e1; padding-top: 8px; font-size: 9px; font-weight: 800; text-transform: uppercase; color: #94a3b8; letter-spacing: 1.5px;">Assinatura do Cliente</div>
+                    </div>
+                </div>
+            `;
+
+            const opt = {
+                margin: 0,
+                filename: `Proposta_ORC${shortId}.pdf`,
+                image: { type: 'jpeg', quality: 1.0 },
+                html2canvas: { scale: 3, useCORS: true, letterRendering: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
+            };
+
+            try { await html2pdf().set(opt).from(pdfContent).save(); } catch (err) { alert("Falha ao gerar PDF."); }
+        };
+
+        window.renderHistory = async (cid) => {
+            try {
+                const sales = await api(`/sales/client/${cid}`);
+                document.getElementById('report-content').innerHTML = `<div class="table-responsive"><table class="table table-sm align-middle"><thead class="x-small text-slate-400 uppercase fw-bold"><tr><th>Ref</th><th>Data</th><th>Estado</th><th class="text-end">Total</th></tr></thead><tbody>${sales.map(s => `<tr><td><span class="fw-bold">#${s.id}</span></td><td>${s.date}</td><td><span class="badge bg-success bg-opacity-10 text-success">${s.status}</span></td><td class="text-end fw-bold text-primary">${parseFloat(s.total_amount || s.total).toFixed(2)} €</td></tr>`).join('') || '<tr><td colspan="4" class="text-center py-5 text-muted small">Sem registos financeiros para este cliente.</td></tr>'}</tbody></table></div>`;
+            } catch(e) {}
+        }
+
+        window.editProd = (id) => { const p = db.products.find(x => x.id == id); document.getElementById('p-id').value = p.id; document.getElementById('p-name').value = p.name; document.getElementById('p-size').value = p.size; document.getElementById('p-price').value = p.price; document.getElementById('p-stock').value = p.stock; document.getElementById('form-product').scrollIntoView(); };
+        window.editCli = (id) => { const c = db.clients.find(x => x.id == id); document.getElementById('c-id').value = c.id; document.getElementById('c-name').value = c.name; document.getElementById('c-phone').value = c.phone; document.getElementById('form-client').scrollIntoView(); };
+        window.deleteDoc = async (col, id) => { if (confirm("Deseja eliminar este registo permanentemente?")) { try { await api(`/${col}/${id}`, 'DELETE'); alert("Registo eliminado!"); loadAllData(); } catch (e) { alert(e.message); } } };
+        window.loadQuoteForEdit = (id) => { const q = db.quotes.find(x => x.id == id); if (!q) return; cart = q.items.map(i => ({ id: i.product_id, name: i.product_name || i.name, qty: i.quantity, price: parseFloat(i.price_unit || i.price) })); document.getElementById('client-select-pos').value = q.client_id || ""; document.getElementById('discount-input').value = q.discount || 0; window.updateCartUI(); bootstrap.Tab.getOrCreateInstance(document.querySelector('a[href="#tab-vendas"]')).show(); };
+
+        window.onload = loadAllData;
+    </script>
+</body>
+</html>

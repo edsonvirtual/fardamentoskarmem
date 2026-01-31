@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Karmem Fardamentos - Gestão Profissional</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        :root { --primary: #6a0dad; --secondary: #4f46e5; }
+        body { background-color: #f1f5f9; font-family: 'Segoe UI', system-ui, sans-serif; color: #1e293b; }
+        .karmem-header { 
+            background: linear-gradient(135deg, var(--primary), var(--secondary)); 
+            color: white; padding: 1.5rem; border-bottom-left-radius: 2rem; border-bottom-right-radius: 2rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); margin-bottom: 25px;
+        }
+        .nav-pills .nav-link { color: #64748b; font-weight: 600; border-radius: 12px; }
+        .nav-pills .nav-link.active { background-color: var(--primary) !important; }
+        .status-badge { font-size: 0.7rem; padding: 6px 14px; border-radius: 50px; font-weight: 700; }
+        .card-product { transition: all 0.3s ease; cursor: pointer; border-radius: 18px; border: 1px solid #e2e8f0; background: white; }
+        .card-product:hover { transform: translateY(-5px); border-color: var(--primary); }
+    </style>
+</head>
+<body>
+
+    <header class="karmem-header text-center">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div style="width: 100px;"></div>
+            <div>
+                <h1 class="h2 fw-bold m-0">Karmem Fardamentos</h1>
+                <p class="small opacity-80 m-0">Sistema de Gestão Profissional</p>
+            </div>
+            <div id="connection-status" class="status-badge bg-danger text-white">OFFLINE</div>
+        </div>
+    </header>
+
+    <div class="container pb-5">
+        <ul class="nav nav-pills mb-4 justify-content-center bg-white p-2 rounded-4 shadow-sm border">
+            <li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#tab-vendas">Vendas</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tab-orcamentos">Orçamentos</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tab-estoque">Stock</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tab-clientes">Clientes</a></li>
+        </ul>
+
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="tab-vendas">
+                <div class="row g-4">
+                    <div class="col-lg-8">
+                        <div class="bg-white p-4 rounded-4 shadow-sm border h-100">
+                            <input type="text" id="search-pos" class="form-control mb-4" placeholder="Procurar produto..." oninput="window.render()">
+                            <div id="pos-grid" class="row g-3"></div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="bg-white p-4 rounded-4 shadow-sm border-2 border-primary sticky-top" style="top: 20px;">
+                            <h5 class="fw-bold text-primary mb-3">Carrinho</h5>
+                            <select id="client-select-pos" class="form-select mb-3"></select>
+                            <div id="cart-items" class="mb-4 small border-bottom pb-2 overflow-auto" style="max-height: 200px;"></div>
+                            <div class="d-flex justify-content-between h4 fw-bold text-primary"><span>Total</span><span id="cart-total">R$ 0,00</span></div>
+                            <div class="d-grid gap-2 mt-4">
+                                <button class="btn btn-primary py-3 fw-bold" id="btn-finish" disabled onclick="window.handleTransaction('sale')">FINALIZAR VENDA</button>
+                                <button class="btn btn-outline-secondary" id="btn-quote" disabled onclick="window.handleTransaction('quote')">CRIAR ORÇAMENTO</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="tab-orcamentos">
+                <div class="bg-white p-4 rounded-4 shadow-sm border">
+                    <h5 class="fw-bold mb-4">Histórico de Orçamentos</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr><th>Ref</th><th>Data</th><th>Cliente</th><th>Total</th><th class="text-center">PDF</th><th class="text-end">Ações</th></tr>
+                            </thead>
+                            <tbody id="all-quotes-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="tab-estoque"><div id="inventory-table"></div></div>
+            <div class="tab-pane fade" id="tab-clientes"><div id="clients-table"></div></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        let db = { products: [], clients: [], quotes: [] };
+        let cart = [];
+        let isOnline = false;
+
+        async function api(path, method = 'GET', body = null) {
+            try {
+                const options = { method, headers: { 'Content-Type': 'application/json' } };
+                if (body) options.body = JSON.stringify(body);
+                const res = await fetch(`${API_URL}${path}`, options);
+                const data = await res.json();
+                updateStatus(true);
+                return data;
+            } catch (e) { updateStatus(false); return null; }
+        }
+
+        function updateStatus(online) {
+            isOnline = online;
+            const b = document.getElementById('connection-status');
+            b.innerText = online ? 'LIGADO' : 'OFFLINE';
+            b.className = `status-badge ${online ? 'bg-success' : 'bg-danger animate-pulse'}`;
+        }
+
+        async function loadAllData() {
+            const [p, c, q] = await Promise.all([api('/products'), api('/clients'), api('/quotes')]);
+            db.products = p || []; db.clients = c || []; db.quotes = q || [];
+            window.render();
+        }
+
+        window.render = () => {
+            const search = document.getElementById('search-pos').value.toLowerCase();
+            document.getElementById('pos-grid').innerHTML = db.products.filter(p => p.name.toLowerCase().includes(search)).map(p => `
+                <div class="col-md-4"><div class="card card-product p-3" onclick="window.addToCart(${p.id})">
+                    <span class="badge bg-primary w-25 mb-2">${p.size}</span>
+                    <h6 class="fw-bold m-0">${p.name}</h6>
+                    <p class="text-primary fw-bold mt-2 mb-0">R$ ${parseFloat(p.price).toFixed(2)}</p>
+                </div></div>`).join('');
+
+            document.getElementById('all-quotes-table').innerHTML = db.quotes.map(q => `
+                <tr>
+                    <td>#${q.id.toString().split('-').pop()}</td>
+                    <td>${q.date}</td>
+                    <td>${q.client_name || 'Avulso'}</td>
+                    <td>R$ ${parseFloat(q.total || 0).toFixed(2)}</td>
+                    <td class="text-center">
+                        <button onclick="window.printFormalPDF('${q.id}')" class="btn btn-sm btn-primary">
+                            <i class="bi bi-file-earmark-pdf"></i> Baixar PDF
+                        </button>
+                    </td>
+                    <td class="text-end">
+                        <button onclick="window.deleteDoc('quotes', '${q.id}')" class="btn btn-sm text-danger"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>`).join('');
+
+            document.getElementById('client-select-pos').innerHTML = '<option value="">Selecione o Cliente</option>' + 
+                db.clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        }
+
+        window.addToCart = (id) => {
+            const p = db.products.find(x => x.id == id);
+            const inCart = cart.find(x => x.id == id);
+            if (inCart) inCart.qty++; else cart.push({ ...p, qty: 1 });
+            window.updateCartUI();
+        }
+
+        window.updateCartUI = () => {
+            let total = 0;
+            document.getElementById('cart-items').innerHTML = cart.map((item, i) => {
+                total += item.price * item.qty;
+                return `<div class="d-flex justify-content-between mb-2"><span>${item.qty}x ${item.name}</span><b>R$ ${(item.price * item.qty).toFixed(2)}</b></div>`;
+            }).join('') || 'Carrinho vazio';
+            document.getElementById('cart-total').innerText = `R$ ${total.toFixed(2)}`;
+            document.getElementById('btn-finish').disabled = document.getElementById('btn-quote').disabled = cart.length === 0;
+        }
+
+        window.handleTransaction = async (type) => {
+            const data = {
+                id: (type === 'sale' ? 'KF-' : 'ORC-') + Date.now(),
+                client_id: document.getElementById('client-select-pos').value || null,
+                total: cart.reduce((acc, i) => acc + (i.price * i.qty), 0),
+                items: cart,
+                date: new Date().toLocaleDateString('pt-BR')
+            };
+            await api(type === 'sale' ? '/sales' : '/quotes', 'POST', data);
+            alert("Sucesso!"); cart = []; window.updateCartUI(); loadAllData();
+        };
+
+        // --- FUNÇÃO PDF REVISADA E TESTADA ---
+        window.printFormalPDF = async (id) => {
+    const q = db.quotes.find(x => x.id == id);
+    if (!q) return alert("Orçamento não encontrado!");
+
+    const client = db.clients.find(c => String(c.id) === String(q.client_id));
+    const clientName = client?.name || q.client_name || 'Cliente Particular';
+    const shortId = q.id.toString().split('-').pop();
+    
+    // Nome do arquivo salvo
+    const fileName = `Orcamento_${clientName.replace(/\s+/g, '_')}_${shortId}.pdf`;
+
+    // Conteúdo formatado para o PDF
+    const pdfContent = `
+        <div style="font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; color: #333; background: #fff;">
+            <div style="border-bottom: 3px solid #6a0dad; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center;">
+                    <div style="background: #6a0dad; color: white; width: 50px; height: 50px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 900; margin-right: 15px;">K</div>
+                    <div>
+                        <h1 style="color: #6a0dad; margin: 0; font-size: 24px; font-weight: 800;">KARMEM FARDAMENTOS</h1>
+                        <p style="margin: 0; font-size: 10px; color: #64748b; letter-spacing: 2px; text-transform: uppercase;">Confecção Profissional</p>
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <h2 style="margin: 0; font-size: 16px; color: #1e293b;">ORÇAMENTO Nº ${shortId}</h2>
+                    <p style="margin: 0; font-size: 11px; color: #64748b;">Data de Emissão: ${q.date}</p>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 30px; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between;">
+                <div style="width: 60%;">
+                    <p style="font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 5px;">Dados do Cliente</p>
+                    <h5 style="margin: 0; color: #1e293b; font-size: 15px; font-weight: 700;">${clientName}</h5>
+                    <p style="margin: 2px 0; font-size: 12px; color: #64748b;">Tel: ${client?.phone || 'Não informado'}</p>
+                </div>
+                <div style="width: 35%; text-align: right; border-left: 1px solid #e2e8f0; padding-left: 20px;">
+                    <p style="font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 5px;">Origem</p>
+                    <p style="margin: 0; font-size: 12px; font-weight: 700;">Karmem Fardamentos</p>
+                    <p style="margin: 0; font-size: 10px; color: #64748b;">Jaboatão dos Guararapes - PE</p>
+                </div>
+            </div>
+
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+                <thead>
+                    <tr style="background: #6a0dad; color: white;">
+                        <th style="padding: 12px; text-align: left; font-size: 11px; border-radius: 8px 0 0 0;">NOME DO PRODUTO / DESCRIÇÃO</th>
+                        <th style="padding: 12px; text-align: center; font-size: 11px;">QTD</th>
+                        <th style="padding: 12px; text-align: right; font-size: 11px; border-radius: 0 8px 0 0;">TOTAL ITEM</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${(q.items || []).map((i, idx) => {
+                        const pName = i.product_name || i.name || "Produto sem nome";
+                        const price = i.price_unit || i.price || 0;
+                        const qty = i.quantity || i.qty || 0;
+                        return `
+                        <tr style="border-bottom: 1px solid #f1f5f9; background: ${idx % 2 === 0 ? '#fff' : '#fcfcfc'};">
+                            <td style="padding: 15px 12px; font-size: 12px;">
+                                <strong style="color: #334155;">${pName.toUpperCase()}</strong><br>
+                                <small style="color: #94a3b8;">Tamanho: ${i.size || 'N/A'}</small>
+                            </td>
+                            <td style="padding: 15px 12px; text-align: center; font-size: 12px; color: #475569;">${qty}</td>
+                            <td style="padding: 15px 12px; text-align: right; font-size: 12px; font-weight: 700; color: #1e293b;">R$ ${(qty * price).toFixed(2)}</td>
+                        </tr>`;
+                    }).join('')}
+                </tbody>
+            </table>
+
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 60px;">
+                <div style="width: 220px; background: #fdfaff; border: 1px solid #efdbff; padding: 15px; border-radius: 10px; text-align: right;">
+                    <p style="margin: 0; font-size: 12px; color: #64748b;">Subtotal: R$ ${parseFloat(q.subtotal || q.total).toFixed(2)}</p>
+                    <p style="margin: 5px 0; font-size: 18px; font-weight: 800; color: #6a0dad;">TOTAL: R$ ${parseFloat(q.total || 0).toFixed(2)}</p>
+                </div>
+            </div>
+
+            <div style="margin-top: 80px; display: flex; justify-content: space-between; gap: 50px; text-align: center;">
+                <div style="flex: 1;">
+                    <div style="border-top: 1px solid #cbd5e1; margin-bottom: 5px;"></div>
+                    <p style="margin: 0; font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase;">Karmem Fardamentos</p>
+                    <p style="margin: 0; font-size: 9px; color: #94a3b8;">Responsável pela Proposta</p>
+                </div>
+                <div style="flex: 1;">
+                    <div style="border-top: 1px solid #cbd5e1; margin-bottom: 5px;"></div>
+                    <p style="margin: 0; font-size: 10px; font-weight: 700; color: #475569; text-transform: uppercase;">Aceite do Cliente</p>
+                    <p style="margin: 0; font-size: 9px; color: #94a3b8;">Data: ____/____/2026</p>
+                </div>
+            </div>
+
+            <div style="margin-top: 50px; text-align: center; border-top: 1px solid #f1f5f9; padding-top: 20px;">
+                <p style="font-size: 9px; color: #cbd5e1; letter-spacing: 1px;">Karmem Fardamentos - Excelência em cada detalhe.</p>
+                <p style="font-size: 8px; color: #e2e8f0; margin-top: 5px;">Orçamento válido por 7 dias corridos.</p>
+            </div>
+        </div>
+    `;
+
+    const opt = {
+        margin: 0,
+        filename: fileName,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    try {
+        await html2pdf().set(opt).from(pdfContent).save();
+    } catch (error) {
+        console.error("Erro ao gerar PDF:", error);
+        alert("Ocorreu um erro ao gerar o arquivo. Tente novamente.");
+    }
+};
+
+        window.deleteDoc = async (col, id) => {
+            if (confirm("Excluir?")) { await api(`/${col}/${id}`, 'DELETE'); loadAllData(); }
+        }
+
+        window.onload = loadAllData;
+    </script>
+</body>
+</html>

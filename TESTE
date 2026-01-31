@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Karmem Fardamentos - Gestão Profissional</title>
+    
+    <!-- Bibliotecas de Estilo -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        :root {
+            --primary: #6a0dad;
+            --secondary: #4f46e5;
+            --danger: #dc3545;
+        }
+
+        body {
+            background-color: #f4f7f6;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        /* Estilos de Interface */
+        .karmem-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1.5rem;
+            border-bottom-left-radius: 1.5rem;
+            border-bottom-right-radius: 1.5rem;
+            margin-bottom: 20px;
+        }
+
+        .nav-pills .nav-link.active {
+            background-color: var(--primary);
+        }
+
+        /* Sinalização de Stock Zero */
+        .stock-zero {
+            border: 2px solid var(--danger) !important;
+            animation: pulse-danger 2s infinite;
+        }
+
+        @keyframes pulse-danger {
+            0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+        }
+
+        /* ESTILO DO CUPÃO - Otimizado para 58mm (Alinhado à Esquerda) */
+        .receipt-container {
+            font-family: 'Courier New', Courier, monospace;
+            width: 58mm;
+            max-width: 100%;
+            margin: 0; 
+            color: #000;
+            background: #fff;
+            padding: 1.5mm; 
+            box-sizing: border-box;
+            text-align: left;
+        }
+
+        /* ESTILO DO ORÇAMENTO FORMAL (PDF ATRAENTE) */
+        .formal-container {
+            width: 210mm;
+            padding: 20mm;
+            margin: auto;
+            background: white;
+            color: #333;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .formal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .receipt-header {
+            border-bottom: 1px dashed #000;
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .receipt-line {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            margin-bottom: 3px;
+            word-break: break-all;
+            font-weight: 600; 
+        }
+
+        /* ESCONDER ÁREA DE IMPRESSÃO NO ECRÃ */
+        #print-area, #formal-print-area {
+            display: none;
+        }
+
+        /* REGRAS DE IMPRESSÃO - CRÍTICO */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #print-area, #print-area *, #formal-print-area, #formal-print-area * {
+                visibility: visible;
+            }
+            
+            /* Se estivermos a imprimir o cupão térmico */
+            .is-thermal #print-area {
+                display: block !important;
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 58mm;
+                margin: 0;
+                padding: 0;
+            }
+
+            /* Se estivermos a imprimir o documento formal */
+            .is-formal #formal-print-area {
+                display: block !important;
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+            }
+            
+            .no-print {
+                display: none !important;
+            }
+            @page {
+                margin: 0;
+                size: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Cabeçalho (Oculto na impressão) -->
+    <header class="karmem-header text-center no-print">
+        <h1 class="h2 fw-bold m-0">Karmem Fardamentos</h1>
+        <p class="small opacity-75 m-0">Frente de Loja e Gestão de Medidas</p>
+    </header>
+
+    <div class="container pb-5 no-print">
+        
+        <!-- Navegação -->
+        <ul class="nav nav-pills mb-4 justify-content-center bg-white p-2 rounded-pill shadow-sm">
+            <li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#tab-vendas"><i class="bi bi-cart3 me-2"></i>Vendas</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tab-orcamentos"><i class="bi bi-file-earmark-text me-2"></i>Orçamentos</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tab-estoque"><i class="bi bi-box-seam me-2"></i>Stock</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tab-clientes"><i class="bi bi-person-badge me-2"></i>Clientes</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tab-relatorios"><i class="bi bi-file-text me-2"></i>Relatórios</a></li>
+        </ul>
+
+        <div class="tab-content">
+            
+            <!-- ABA VENDAS -->
+            <div class="tab-pane fade show active" id="tab-vendas">
+                <div class="row g-4">
+                    <div class="col-lg-8">
+                        <div class="bg-white p-4 rounded-4 shadow-sm h-100">
+                            <div class="d-flex justify-content-between mb-3">
+                                <h5 class="fw-bold">Catálogo de Fardamentos</h5>
+                                <input type="text" id="search-pos" class="form-control w-50" placeholder="Pesquisar...">
+                            </div>
+                            <div id="pos-grid" class="row g-3">
+                                <!-- Produtos gerados via JS -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="bg-white p-4 rounded-4 shadow-sm border-2 border-primary sticky-top" style="top: 20px;">
+                            <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                                <h5 class="fw-bold m-0">Carrinho</h5>
+                                <button onclick="clearCart()" class="btn btn-sm btn-outline-danger py-0">Limpar</button>
+                            </div>
+                            
+                            <label class="small fw-bold text-muted mb-1">Cliente</label>
+                            <select id="client-select-pos" class="form-select mb-3">
+                                <option value="">Cliente Não Identificado</option>
+                            </select>
+
+                            <label class="small fw-bold text-muted mb-1">Forma de Pagamento</label>
+                            <select id="payment-method-pos" class="form-select mb-3">
+                                <option value="Dinheiro">Dinheiro</option>
+                                <option value="Cartão de Débito">Cartão de Débito</option>
+                                <option value="Cartão de Crédito">Cartão de Crédito</option>
+                                <option value="PIX">PIX</option>
+                                <option value="Transferência">Transferência</option>
+                            </select>
+
+                            <!-- PARTE DE DESCONTO -->
+                            <label class="small fw-bold text-muted mb-1">Desconto</label>
+                            <div class="input-group mb-3">
+                                <select id="discount-type" class="form-select" style="max-width: 80px;" onchange="updateCartUI()">
+                                    <option value="val">R$</option>
+                                    <option value="per">%</option>
+                                </select>
+                                <input type="number" id="discount-input" class="form-control" placeholder="0" value="0" min="0" oninput="updateCartUI()">
+                            </div>
+
+                            <div id="cart-items" class="mb-4" style="min-height: 120px;">
+                                <p class="text-muted text-center small py-4">Carrinho vazio</p>
+                            </div>
+                            
+                            <div class="border-top pt-3">
+                                <div class="d-flex justify-content-between small text-muted mb-1">
+                                    <span>Subtotal</span>
+                                    <span id="cart-subtotal">R$ 0,00</span>
+                                </div>
+                                <div class="d-flex justify-content-between small text-danger mb-2">
+                                    <span>Desconto</span>
+                                    <span id="cart-discount-display">R$ 0,00</span>
+                                </div>
+                                <div class="d-flex justify-content-between h4 fw-bold text-primary mb-4">
+                                    <span>Total</span>
+                                    <span id="cart-total">R$ 0,00</span>
+                                </div>
+                                <div class="d-grid gap-2">
+                                    <button id="btn-finish" class="btn btn-primary py-3 fw-bold rounded-pill" disabled onclick="finishTransaction('sale')">FINALIZAR COMPRA</button>
+                                    <button id="btn-quote" class="btn btn-outline-secondary py-2 fw-bold rounded-pill" disabled onclick="finishTransaction('quote')">CRIAR ORÇAMENTO</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA ORÇAMENTOS -->
+            <div class="tab-pane fade" id="tab-orcamentos">
+                <div class="bg-white p-4 rounded-4 shadow-sm">
+                    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+                        <h5 class="fw-bold m-0">Lista de Orçamentos Realizados</h5>
+                        <button onclick="clearCart(); bootstrap.Tab.getOrCreateInstance(document.querySelector('a[href=\'#tab-vendas\']')).show();" class="btn btn-primary rounded-pill px-4">
+                            <i class="bi bi-plus-lg me-2"></i>Novo Orçamento
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Nº</th>
+                                    <th>Data</th>
+                                    <th>Cliente</th>
+                                    <th>Total</th>
+                                    <th class="text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="all-quotes-table">
+                                <!-- Gerado via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA STOCK -->
+            <div class="tab-pane fade" id="tab-estoque">
+                <div class="bg-white p-4 rounded-4 shadow-sm">
+                    <h5 class="fw-bold mb-4">Novo Produto / Ajuste de Stock</h5>
+                    <form id="form-product" class="row g-3 mb-5 p-3 bg-light rounded-3">
+                        <input type="hidden" id="p-id">
+                        <div class="col-md-5">
+                            <label class="small fw-bold">Descrição</label>
+                            <input type="text" id="p-name" class="form-control" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="small fw-bold">Tamanho</label>
+                            <select id="p-size" class="form-select">
+                                <option>P</option><option>M</option><option>G</option><option>GG</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="small fw-bold">Preço</label>
+                            <input type="number" id="p-price" class="form-control" step="0.01" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="small fw-bold">Stock Atual</label>
+                            <input type="number" id="p-stock" class="form-control" required>
+                        </div>
+                        <div class="col-12 text-end">
+                            <button type="submit" class="btn btn-primary px-4">Salvar</button>
+                        </div>
+                    </form>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Produto</th>
+                                    <th>Tam</th>
+                                    <th>Preço</th>
+                                    <th>Stock</th>
+                                    <th class="text-center">Acções</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventory-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA CLIENTES -->
+            <div class="tab-pane fade" id="tab-clientes">
+                <div class="bg-white p-4 rounded-4 shadow-sm">
+                    <h5 class="fw-bold mb-4">Registo de Clientes e Medidas</h5>
+                    <form id="form-client" class="row g-3 mb-5">
+                        <input type="hidden" id="c-id">
+                        <div class="col-md-6"><label class="small fw-bold">Nome Completo</label><input type="text" id="c-name" class="form-control" required></div>
+                        <div class="col-md-6"><label class="small fw-bold">Telemóvel</label><input type="text" id="c-phone" class="form-control"></div>
+                        <div class="col-md-3"><label class="small">Ombro (cm)</label><input type="text" id="m-ombro" class="form-control"></div>
+                        <div class="col-md-3"><label class="small">Peito (cm)</label><input type="text" id="m-peito" class="form-control"></div>
+                        <div class="col-md-3"><label class="small">Cintura (cm)</label><input type="text" id="m-cintura" class="form-control"></div>
+                        <div class="col-md-3"><label class="small">Quadril (cm)</label><input type="text" id="m-quadril" class="form-control"></div>
+                        <div class="col-12 text-end"><button type="submit" class="btn btn-primary px-4">Salvar Cliente</button></div>
+                    </form>
+                    <div id="clients-list" class="table-responsive">
+                        <table class="table table-sm">
+                            <thead><tr><th>Nome</th><th>Stock Medidas</th><th class="text-center">Acções</th></tr></thead>
+                            <tbody id="clients-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA RELATÓRIOS -->
+            <div class="tab-pane fade" id="tab-relatorios">
+                <div class="bg-white p-4 rounded-4 shadow-sm">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="fw-bold m-0">Histórico de Compras por Cliente</h5>
+                    </div>
+
+                    <div id="report-view-client" class="row">
+                        <div class="col-md-4">
+                            <select id="report-select-client" class="form-select mb-3">
+                                <option value="">Escolha um cliente...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8">
+                            <div id="report-content" class="p-3 border rounded bg-light">
+                                <p class="text-muted">Selecione um cliente para ver as vendas realizadas.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ÁREA DE IMPRESSÃO TÉRMICA (58mm) -->
+    <div id="print-area">
+        <div id="receipt-summary" class="receipt-container"></div>
+    </div>
+
+    <!-- ÁREA DE IMPRESSÃO FORMAL (PDF A4 ATRAENTE) -->
+    <div id="formal-print-area">
+        <div id="formal-receipt-summary" class="formal-container"></div>
+    </div>
+
+    <script>
+        // --- BASE DE DADOS SIMULADA ---
+        const db = {
+            products: JSON.parse(localStorage.getItem('kf_prod')) || [
+                { id: 1, name: 'Bata Branca Oxford', size: 'M', price: 65.00, stock: 5 },
+                { id: 2, name: 'Calça Azul Brim', size: 'G', price: 89.90, stock: 0 }
+            ],
+            clients: JSON.parse(localStorage.getItem('kf_cli')) || [],
+            sales: JSON.parse(localStorage.getItem('kf_sales')) || [],
+            quotes: JSON.parse(localStorage.getItem('kf_quotes')) || []
+        };
+
+        let editingQuoteId = null;
+
+        const save = () => {
+            localStorage.setItem('kf_prod', JSON.stringify(db.products));
+            localStorage.setItem('kf_cli', JSON.stringify(db.clients));
+            localStorage.setItem('kf_sales', JSON.stringify(db.sales));
+            localStorage.setItem('kf_quotes', JSON.stringify(db.quotes));
+            render();
+        };
+
+        let cart = [];
+
+        // --- RENDERIZAÇÃO ---
+        function render() {
+            renderPOS();
+            renderInventory();
+            renderClients();
+            updateDropdowns();
+            renderAllQuotes();
+        }
+
+        function renderPOS() {
+            const grid = document.getElementById('pos-grid');
+            const search = document.getElementById('search-pos').value.toLowerCase();
+            grid.innerHTML = '';
+            
+            db.products.filter(p => p.name.toLowerCase().includes(search)).forEach(p => {
+                const isOut = p.stock <= 0;
+                grid.innerHTML += `
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 shadow-sm ${isOut ? 'stock-zero opacity-75' : ''}">
+                            <div class="card-body p-3">
+                                <span class="badge ${isOut ? 'bg-danger' : 'bg-primary'} mb-2">${p.size}</span>
+                                <h6 class="fw-bold text-truncate m-0">${p.name}</h6>
+                                <p class="text-primary fw-bold mb-2">R$ ${p.price.toFixed(2)}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="${isOut ? 'text-danger fw-bold' : 'text-muted'}">Stock: ${p.stock}</small>
+                                    <button onclick="addToCart(${p.id})" class="btn btn-sm ${isOut ? 'btn-secondary' : 'btn-outline-primary'}" ${isOut ? 'disabled' : ''}>
+                                        ${isOut ? 'Esgotado' : 'Adicionar'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function renderInventory() {
+            const table = document.getElementById('inventory-table');
+            table.innerHTML = '';
+            db.products.forEach(p => {
+                const isOut = p.stock <= 0;
+                table.innerHTML += `
+                    <tr class="${isOut ? 'table-danger' : ''}">
+                        <td>${p.name}</td>
+                        <td>${p.size}</td>
+                        <td>R$ ${p.price.toFixed(2)}</td>
+                        <td><span class="badge ${isOut ? 'bg-danger' : 'bg-success'}">${p.stock}</span></td>
+                        <td class="text-center">
+                            <button onclick="editProd(${p.id})" class="btn btn-sm btn-light border"><i class="bi bi-pencil"></i></button>
+                            <button onclick="deleteProd(${p.id})" class="btn btn-sm btn-light border text-danger"><i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderClients() {
+            const table = document.getElementById('clients-table');
+            table.innerHTML = '';
+            db.clients.forEach(c => {
+                table.innerHTML += `
+                    <tr>
+                        <td><b>${c.name}</b><br><small>${c.phone || ''}</small></td>
+                        <td class="small">O:${c.m1} P:${c.m2} C:${c.m3} Q:${c.m4}</td>
+                        <td class="text-center">
+                            <button onclick="editCli(${c.id})" class="btn btn-sm btn-light border"><i class="bi bi-pencil"></i></button>
+                            <button onclick="deleteCli(${c.id})" class="btn btn-sm btn-light border text-danger"><i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function updateDropdowns() {
+            const posSel = document.getElementById('client-select-pos');
+            const repSel = document.getElementById('report-select-client');
+            const options = '<option value="">Identificar Cliente...</option>' + db.clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            posSel.innerHTML = options;
+            repSel.innerHTML = '<option value="">Escolha um cliente...</option>' + db.clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        }
+
+        // --- ACÇÕES CARRINHO ---
+        window.addToCart = (id) => {
+            const p = db.products.find(x => x.id === id);
+            const inCart = cart.find(x => x.id === id);
+            if (inCart) inCart.qty++; else cart.push({ ...p, qty: 1 });
+            updateCartUI();
+        };
+
+        function updateCartUI() {
+            const list = document.getElementById('cart-items');
+            const subEl = document.getElementById('cart-subtotal');
+            const discEl = document.getElementById('cart-discount-display');
+            const totalEl = document.getElementById('cart-total');
+            const btnFinish = document.getElementById('btn-finish');
+            const btnQuote = document.getElementById('btn-quote');
+            
+            if (cart.length === 0) {
+                list.innerHTML = '<p class="text-muted text-center small py-4">Carrinho vazio</p>';
+                subEl.innerText = 'R$ 0,00';
+                discEl.innerText = 'R$ 0,00';
+                totalEl.innerText = 'R$ 0,00';
+                btnFinish.disabled = btnQuote.disabled = true;
+                return;
+            }
+
+            let subtotal = 0;
+            list.innerHTML = cart.map((item, i) => {
+                subtotal += item.price * item.qty;
+                return `
+                    <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-1">
+                        <div class="small"><b>${item.qty}x</b> ${item.name}</div>
+                        <div class="d-flex align-items-center">
+                            <span class="small me-2">R$ ${(item.price * item.qty).toFixed(2)}</span>
+                            <button onclick="removeFromCart(${i})" class="btn btn-sm text-danger p-0"><i class="bi bi-x-circle"></i></button>
+                        </div>
+                    </div>`;
+            }).join('');
+
+            const dType = document.getElementById('discount-type').value;
+            const dVal = parseFloat(document.getElementById('discount-input').value) || 0;
+            let discount = (dType === 'per') ? subtotal * (dVal / 100) : dVal;
+            
+            const total = Math.max(0, subtotal - discount);
+
+            subEl.innerText = `R$ ${subtotal.toFixed(2)}`;
+            discEl.innerText = `- R$ ${discount.toFixed(2)}`;
+            totalEl.innerText = `R$ ${total.toFixed(2)}`;
+            btnFinish.disabled = btnQuote.disabled = false;
+        }
+
+        window.removeFromCart = (i) => { cart.splice(i, 1); updateCartUI(); };
+
+        window.clearCart = () => {
+            cart = [];
+            editingQuoteId = null;
+            document.getElementById('discount-input').value = 0;
+            document.getElementById('client-select-pos').value = "";
+            updateCartUI();
+        };
+
+        // GERAÇÃO DO HTML DO CUPÃO TÉRMICO
+        function generateDocHTML(type, data, clientName) {
+            const subtotal = data.items.reduce((acc, item) => acc + (item.price * item.qty), 0);
+            const discountLine = data.discount > 0 ? `
+                <div class="receipt-line"><span>Subtotal:</span> <span>R$ ${subtotal.toFixed(2)}</span></div>
+                <div class="receipt-line"><span>Desconto:</span> <span>-R$ ${data.discount.toFixed(2)}</span></div>
+            ` : '';
+
+            return `
+                <div class="receipt-header">
+                    <h4 style="margin:0; font-weight: bold; font-size: 15px;">KARMEM FARDAMENTOS</h4>
+                    <span style="font-size: 10px;">${type === 'sale' ? 'RESUMO DE COMPRA' : 'ORÇAMENTO RÁPIDO'}</span>
+                </div>
+                <div style="font-size: 11px; margin-bottom: 6px;">
+                    <div class="receipt-line"><span>Data:</span> <span>${data.date}</span></div>
+                    <div class="receipt-line"><span>Nº:</span> <span>#${data.id}</span></div>
+                    <div class="receipt-line"><span>Cliente:</span> <span>${clientName}</span></div>
+                    ${type === 'sale' ? `<div class="receipt-line"><span>Pagamento:</span> <span>${data.paymentMethod}</span></div>` : ''}
+                </div>
+                <div style="border-top:1px dashed #000; padding-top:6px; margin-bottom:6px">
+                    ${data.items.map(i => `
+                        <div class="receipt-line">
+                            <span style="max-width: 60%;">${i.qty}x ${i.name.toUpperCase()}</span>
+                            <span>R$ ${(i.price * i.qty).toFixed(2)}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                <div style="border-top:1px dashed #000; padding-top:6px; margin-bottom:6px">
+                    ${discountLine}
+                </div>
+                <div class="receipt-line" style="border-top:1px solid #000; padding-top:6px; font-weight: bold; font-size:15px">
+                    <span>TOTAL:</span>
+                    <span>R$ ${data.total.toFixed(2)}</span>
+                </div>
+                <div class="text-center mt-3" style="font-size:10px">
+                    ${type === 'quote' ? 'Válido por 7 dias.<br>' : ''}
+                    OBRIGADO PELA PREFERÊNCIA!<br>Documento sem valor fiscal.
+                </div>
+            `;
+        }
+
+        // GERAÇÃO DO HTML FORMAL (PDF ATRAENTE)
+        function generateFormalDocHTML(data, client) {
+            const subtotal = data.items.reduce((acc, item) => acc + (item.price * item.qty), 0);
+            const clientName = client ? client.name : 'Identificar no ato';
+            const clientPhone = client ? client.phone : '-';
+
+            return `
+                <div class="formal-header">
+                    <div>
+                        <h2 style="font-size: 28px; color: var(--primary); font-weight: bold; margin: 0;">KARMEM FARDAMENTOS</h2>
+                        <p style="margin: 0; color: #666;">Qualidade em cada detalhe</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <h3 style="margin: 0; font-weight: bold;">PROPOSTA DE ORÇAMENTO</h3>
+                        <p style="margin: 0; color: #666;">Nº ${data.id}</p>
+                        <p style="margin: 0; color: #666;">Data: ${data.date}</p>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 40px;">
+                    <div>
+                        <h4 style="border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 10px; font-weight: bold; color: var(--primary);">DADOS DO CLIENTE</h4>
+                        <p style="margin: 2px 0;"><b>Nome:</b> ${clientName}</p>
+                        <p style="margin: 2px 0;"><b>Telefone:</b> ${clientPhone}</p>
+                    </div>
+                    <div>
+                        <h4 style="border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 10px; font-weight: bold; color: var(--primary);">DADOS DA EMPRESA</h4>
+                        <p style="margin: 2px 0;"><b>Karmem Fardamentos</b></p>
+                        <p style="margin: 2px 0;"><b>Contacto:</b> (XX) XXXX-XXXX</p>
+                        <p style="margin: 2px 0;"><b>Email:</b> contacto@karmemfardamentos.pt</p>
+                    </div>
+                </div>
+
+                <table class="table table-bordered">
+                    <thead style="background: #f8f9fa;">
+                        <tr>
+                            <th>Descrição do Produto</th>
+                            <th class="text-center" style="width: 100px;">Qtd</th>
+                            <th class="text-end" style="width: 150px;">P. Unitário</th>
+                            <th class="text-end" style="width: 150px;">P. Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.items.map(i => `
+                            <tr>
+                                <td>${i.name.toUpperCase()}</td>
+                                <td class="text-center">${i.qty}</td>
+                                <td class="text-end">R$ ${parseFloat(i.price).toFixed(2)}</td>
+                                <td class="text-end">R$ ${(parseFloat(i.price) * i.qty).toFixed(2)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+
+                <div style="margin-top: 30px; display: flex; justify-content: flex-end;">
+                    <div style="width: 300px;">
+                        <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee;">
+                            <span>Subtotal:</span>
+                            <span>R$ ${subtotal.toFixed(2)}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 5px 0; color: var(--danger); border-bottom: 1px solid #eee;">
+                            <span>Desconto Aplicado:</span>
+                            <span>- R$ ${data.discount.toFixed(2)}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0; font-size: 20px; font-weight: bold; color: var(--primary);">
+                            <span>TOTAL:</span>
+                            <span>R$ ${data.total.toFixed(2)}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 50px; padding: 20px; background: #fdfdfd; border: 1px solid #eee; border-radius: 8px;">
+                    <p style="margin: 0; font-size: 14px; color: #666;"><b>Observações:</b></p>
+                    <p style="margin: 5px 0; font-size: 13px; color: #888;">1. Orçamento válido por 7 dias úteis a contar da data de emissão.</p>
+                    <p style="margin: 5px 0; font-size: 13px; color: #888;">2. Prazo de entrega sujeito a disponibilidade de stock ou agendamento de confeção.</p>
+                    <p style="margin: 5px 0; font-size: 13px; color: #888;">3. Este documento não substitui a fatura fiscal final.</p>
+                </div>
+
+                <div style="margin-top: 80px; text-align: center;">
+                    <div style="width: 250px; border-top: 1px solid #333; margin: auto; padding-top: 10px;">
+                        <p style="margin: 0; font-weight: bold;">Karmem Fardamentos</p>
+                        <p style="font-size: 12px; color: #666;">Assinatura do Responsável</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // FINALIZAR TRANSAÇÃO
+        async function finishTransaction(type) {
+            const clientId = document.getElementById('client-select-pos').value;
+            const client = db.clients.find(c => c.id == clientId);
+            const subtotal = cart.reduce((s, i) => s + (i.price * i.qty), 0);
+            const dType = document.getElementById('discount-type').value;
+            const dVal = parseFloat(document.getElementById('discount-input').value) || 0;
+            const discount = (dType === 'per') ? subtotal * (dVal / 100) : dVal;
+            const total = Math.max(0, subtotal - discount);
+            
+            if (editingQuoteId) {
+                db.quotes = db.quotes.filter(q => q.id !== editingQuoteId);
+                editingQuoteId = null;
+            }
+
+            const transId = (type === 'sale' ? 'KF-' : 'ORC-') + Date.now().toString().slice(-5);
+            const data = { 
+                id: transId, 
+                date: new Date().toLocaleString('pt-PT'), 
+                client: clientId || null, 
+                paymentMethod: document.getElementById('payment-method-pos').value,
+                subtotal, discount, total, 
+                items: [...cart] 
+            };
+
+            if (type === 'sale') {
+                cart.forEach(item => {
+                    const p = db.products.find(x => x.id === item.id);
+                    if (p) p.stock -= item.qty;
+                });
+                db.sales.push(data);
+                
+                document.body.classList.add('is-thermal');
+                const printArea = document.getElementById('receipt-summary');
+                printArea.innerHTML = generateDocHTML(type, data, client ? client.name : 'AVULSO');
+            } else {
+                db.quotes.push(data);
+                
+                document.body.classList.add('is-formal');
+                const formalArea = document.getElementById('formal-receipt-summary');
+                formalArea.innerHTML = generateFormalDocHTML(data, client);
+            }
+
+            save();
+            setTimeout(() => {
+                window.print();
+                document.body.classList.remove('is-thermal', 'is-formal');
+            }, 200);
+
+            clearCart();
+        }
+
+        // REIMPRESSÃO
+        window.reprintDoc = (type, mode, id) => {
+            const list = type === 'sale' ? db.sales : db.quotes;
+            const data = list.find(x => x.id === id);
+            if (!data) return;
+            const client = db.clients.find(c => c.id == data.client);
+            
+            if (mode === 'thermal') {
+                document.body.classList.add('is-thermal');
+                document.getElementById('receipt-summary').innerHTML = generateDocHTML(type, data, client ? client.name : 'AVULSO');
+            } else {
+                document.body.classList.add('is-formal');
+                document.getElementById('formal-receipt-summary').innerHTML = generateFormalDocHTML(data, client);
+            }
+            
+            setTimeout(() => {
+                window.print();
+                document.body.classList.remove('is-thermal', 'is-formal');
+            }, 200);
+        };
+
+        // PARTILHA (WhatsApp / Email)
+        window.shareDoc = (platform, type, id) => {
+            const list = type === 'sale' ? db.sales : db.quotes;
+            const data = list.find(x => x.id === id);
+            if (!data) return;
+            const client = db.clients.find(c => c.id == data.client);
+            const clientName = client ? client.name : 'Cliente';
+            const clientEmail = client ? client.email : '';
+            
+            let msg = `Olá ${clientName}, segue o seu ${type === 'sale' ? 'Recibo' : 'Orçamento'} da *Karmem Fardamentos*:\n\n`;
+            data.items.forEach(i => { msg += `• ${i.qty}x ${i.name.toUpperCase()}: R$ ${(i.price * i.qty).toFixed(2)}\n`; });
+            if(data.discount > 0) msg += `\nSubtotal: R$ ${data.subtotal.toFixed(2)}\nDesconto: R$ ${data.discount.toFixed(2)}`;
+            msg += `\n*TOTAL: R$ ${data.total.toFixed(2)}*\n\n`;
+            if(type === 'quote') msg += `_Válido por 7 dias._\n`;
+            msg += `Obrigado!`;
+
+            if (platform === 'whatsapp') {
+                const phone = client && client.phone ? client.phone.replace(/\D/g, '') : '';
+                window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+            } else {
+                const subject = `Orçamento Karmem Fardamentos - Nº ${data.id}`;
+                window.location.href = `mailto:${clientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(msg)}`;
+            }
+        };
+
+        // EDIÇÃO DE ORÇAMENTO
+        window.loadQuoteForEdit = (quoteId) => {
+            const quote = db.quotes.find(q => q.id === quoteId);
+            if (!quote) return;
+
+            if (cart.length > 0 && !confirm("O carrinho atual será limpo para carregar o orçamento. Deseja continuar?")) return;
+
+            cart = [...quote.items];
+            editingQuoteId = quote.id;
+            
+            document.getElementById('client-select-pos').value = quote.client || "";
+            document.getElementById('discount-input').value = quote.discount;
+            document.getElementById('discount-type').value = "val";
+            
+            updateCartUI();
+            
+            const trigger = document.querySelector('a[href="#tab-vendas"]');
+            bootstrap.Tab.getOrCreateInstance(trigger).show();
+        };
+
+        function renderAllQuotes() {
+            const tbody = document.getElementById('all-quotes-table');
+            tbody.innerHTML = '';
+            
+            if (db.quotes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">Nenhum orçamento encontrado.</td></tr>';
+                return;
+            }
+
+            [...db.quotes].reverse().forEach(q => {
+                const client = db.clients.find(c => c.id == q.client);
+                tbody.innerHTML += `
+                    <tr>
+                        <td><b>${q.id}</b></td>
+                        <td>${q.date}</td>
+                        <td>${client ? client.name : 'AVULSO'}</td>
+                        <td>R$ ${q.total.toFixed(2)}</td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button onclick="reprintDoc('quote', 'formal', '${q.id}')" class="btn btn-sm btn-outline-info py-0" title="Gerar PDF Profissional"><i class="bi bi-file-pdf"></i></button>
+                                <button onclick="reprintDoc('quote', 'thermal', '${q.id}')" class="btn btn-sm btn-outline-primary py-0" title="Imprimir Cupão"><i class="bi bi-printer"></i></button>
+                                <button onclick="loadQuoteForEdit('${q.id}')" class="btn btn-sm btn-outline-warning py-0" title="Editar"><i class="bi bi-pencil"></i></button>
+                                <button onclick="shareDoc('whatsapp', 'quote', '${q.id}')" class="btn btn-sm btn-success py-0" title="WhatsApp"><i class="bi bi-whatsapp"></i></button>
+                                <button onclick="shareDoc('email', 'quote', '${q.id}')" class="btn btn-sm btn-dark py-0" title="Enviar por E-mail"><i class="bi bi-envelope"></i></button>
+                                <button onclick="deleteDoc('quote', '${q.id}')" class="btn btn-sm btn-outline-danger py-0" title="Excluir"><i class="bi bi-trash"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        window.deleteDoc = (type, id) => {
+            if (!confirm("Deseja realmente excluir este registo?")) return;
+            if (type === 'sale') db.sales = db.sales.filter(x => x.id !== id);
+            else db.quotes = db.quotes.filter(x => x.id !== id);
+            save();
+        };
+
+        document.getElementById('report-select-client').onchange = function() {
+            const id = this.value;
+            const content = document.getElementById('report-content');
+            if(!id) { content.innerHTML = '<p class="text-muted">Selecione um cliente...</p>'; return; }
+            
+            const client = db.clients.find(c => c.id == id);
+            const cSales = db.sales.filter(s => s.client == id);
+            
+            content.innerHTML = `
+                <div class="mb-4">
+                    <h6 class="fw-bold text-primary border-bottom pb-2">Vendas Realizadas (${cSales.length})</h6>
+                    ${cSales.map(s => `
+                        <div class="d-flex justify-content-between align-items-center border-bottom py-2 small">
+                            <div><b>${s.id}</b> - ${s.date}<br><span class="text-success fw-bold">R$ ${s.total.toFixed(2)}</span></div>
+                            <div class="btn-group">
+                                <button onclick="reprintDoc('sale', 'thermal', '${s.id}')" class="btn btn-sm btn-outline-primary py-0"><i class="bi bi-printer"></i></button>
+                                <button onclick="shareDoc('whatsapp', 'sale', '${s.id}')" class="btn btn-sm btn-success text-white py-0"><i class="bi bi-whatsapp"></i></button>
+                            </div>
+                        </div>`).join('') || '<p class="text-muted small">Sem vendas registadas.</p>'}
+                </div>
+            `;
+        };
+
+        // --- FORMULÁRIOS MANTIDOS ---
+        document.getElementById('form-product').onsubmit = function(e) {
+            e.preventDefault();
+            const id = document.getElementById('p-id').value;
+            const obj = {
+                id: id ? parseInt(id) : Date.now(),
+                name: document.getElementById('p-name').value,
+                size: document.getElementById('p-size').value,
+                price: parseFloat(document.getElementById('p-price').value),
+                stock: parseInt(document.getElementById('p-stock').value)
+            };
+            if(id) { const i = db.products.findIndex(x => x.id == id); db.products[i] = obj; } else db.products.push(obj);
+            save(); this.reset(); document.getElementById('p-id').value = '';
+        };
+
+        document.getElementById('form-client').onsubmit = function(e) {
+            e.preventDefault();
+            const id = document.getElementById('c-id').value;
+            const obj = {
+                id: id ? parseInt(id) : Date.now(),
+                name: document.getElementById('c-name').value,
+                phone: document.getElementById('c-phone').value,
+                m1: document.getElementById('m-ombro').value, m2: document.getElementById('m-peito').value, m3: document.getElementById('m-cintura').value, m4: document.getElementById('m-quadril').value
+            };
+            if(id) { const i = db.clients.findIndex(x => x.id == id); db.clients[i] = obj; } else db.clients.push(obj);
+            save(); this.reset(); document.getElementById('c-id').value = '';
+        };
+
+        window.editProd = (id) => {
+            const p = db.products.find(x => x.id == id);
+            document.getElementById('p-id').value = p.id;
+            document.getElementById('p-name').value = p.name;
+            document.getElementById('p-size').value = p.size;
+            document.getElementById('p-price').value = p.price;
+            document.getElementById('p-stock').value = p.stock;
+            document.querySelector('a[href="#tab-estoque"]').click();
+        };
+
+        window.deleteProd = (id) => { if(confirm('Excluir produto?')) { db.products = db.products.filter(x => x.id != id); save(); } };
+        window.editCli = (id) => {
+            const c = db.clients.find(x => x.id == id);
+            document.getElementById('c-id').value = c.id;
+            document.getElementById('c-name').value = c.name;
+            document.getElementById('c-phone').value = c.phone;
+            document.getElementById('m-ombro').value = c.m1;
+            document.getElementById('m-peito').value = c.m2;
+            document.getElementById('m-cintura').value = c.m3;
+            document.getElementById('m-quadril').value = c.m4;
+            document.querySelector('a[href="#tab-clientes"]').click();
+        };
+        window.deleteCli = (id) => { if(confirm('Excluir cliente?')) { db.clients = db.clients.filter(x => x.id != id); save(); } };
+
+        document.getElementById('search-pos').oninput = renderPOS;
+        render();
+    </script>
+</body>
+</html>
