@@ -11,34 +11,44 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // CONFIGURAÇÃO DE FICHEIROS ESTÁTICOS
-// Isto garante que o Render encontre o seu index.html e pastas adjacentes
+// Garante que o Render encontre o index.html
 app.use(express.static(path.join(__dirname)));
 
-// --- CONFIGURAÇÃO DA BASE DE DADOS ---
+// --- CONFIGURAÇÃO DA BASE DE DADOS INTELIGENTE ---
 const isProduction = process.env.DATABASE_URL ? true : false;
 
+// String de conexão: Usa a da nuvem (Render/Neon) ou a local
+const dbConnectionString = process.env.DATABASE_URL || 'postgres://postgres:1234L@localhost:5432/karmem_db';
+
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL || 'postgres://postgres:SUA_SENHA@localhost:5432/karmem_db',
-    ssl: isProduction ? { rejectUnauthorized: false } : false 
+    connectionString: dbConnectionString,
+    // Ativa SSL se estiver no Render OU se a URL for do Neon (mesmo rodando local)
+    ssl: (isProduction || dbConnectionString.includes('neon.tech')) 
+        ? { rejectUnauthorized: false } 
+        : false 
 });
 
-// Teste de conexão imediato para o Log do Render
+// TESTE DE CONEXÃO COM LOG DETALHADO
 pool.connect((err, client, release) => {
     if (err) {
-        return console.error('Erro ao conectar à base de dados:', err.stack);
+        console.error('❌ ERRO CRÍTICO NA BASE DE DADOS:');
+        console.error('- Mensagem:', err.message);
+        console.error('- Detalhes:', err.stack.split('\n')[0]);
+        console.log('💡 DICA: Verifique se a senha no server.js está correta ou se a variável DATABASE_URL foi configurada no Render.');
+        return;
     }
-    console.log('Conexão com a base de dados estabelecida com sucesso!');
+    console.log('✅ CONEXÃO ESTABELECIDA: A base de dados está pronta para uso.');
     release();
 });
 
-// ROTA PRINCIPAL: Entrega o index.html quando acede ao link
+// ROTA PRINCIPAL
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // --- ROTAS DA API ---
 
-// Estorno com atualização de stock
+// Estorno com atualização de stock (Transação SQL)
 app.delete('/api/sales/:id', async (req, res) => {
     const { id } = req.params;
     const client = await pool.connect();
@@ -55,6 +65,7 @@ app.delete('/api/sales/:id', async (req, res) => {
         res.json({ success: true });
     } catch (err) {
         await client.query('ROLLBACK');
+        console.error('Erro no estorno:', err.message);
         res.status(500).json({ error: err.message });
     } finally {
         client.release();
