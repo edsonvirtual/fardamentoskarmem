@@ -1,15 +1,18 @@
 {
-  "name": "karmem-fardamentos-api",
+  "name": "karmem-fardamentos",
   "version": "1.0.0",
-  "description": "API Backend para sistema de gestão de fardamentos",
+  "description": "Sistema de Gestão Karmem Fardamentos",
   "main": "server.js",
-  "dependencies": {
-    "body-parser": "^1.20.4",
-    "cors": "^2.8.5",
-    "express": "^4.22.1",
-    "pg": "^8.17.0"
-  },
   "scripts": {
     "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "pg": "^8.11.3",
+    "cors": "^2.8.5",
+    "body-parser": "^1.20.2"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }
