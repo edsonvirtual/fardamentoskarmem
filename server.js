@@ -2,76 +2,95 @@ const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const path = require('path');
 
 const app = express();
+const port = process.env.PORT || 3000;
 
-// Middleware
+// Configuração do Banco de Dados PostgreSQL
+// Certifique-se de que os dados de acesso (user, password, database) estão corretos para o seu ambiente local
+const pool = new Pool({
+    user: 'postgres', // Utilizador padrão do Postgres
+    host: 'localhost',
+    database: 'karmem_db', // Nome da base de dados criada no pgAdmin
+    password: '1234', // A sua senha do PostgreSQL
+    port: 5432,
+});
+
 app.use(cors());
 app.use(bodyParser.json());
+app.use(express.static('.')); // Serve o ficheiro index.html na mesma pasta
 
-// CONFIGURAÇÃO DE FICHEIROS ESTÁTICOS
-// Garante que o Render encontre o index.html
-app.use(express.static(path.join(__dirname)));
+// ==========================================
+// ROTA DE VENDAS (A MAIS IMPORTANTE)
+// ==========================================
+app.post('/api/sales', async (req, res) => {
+    const { 
+        id, client_id, payment_method, subtotal, 
+        discount, down_payment, due_date, 
+        total_amount, items, is_update 
+    } = req.body;
 
-// --- CONFIGURAÇÃO DA BASE DE DADOS INTELIGENTE ---
-const isProduction = process.env.DATABASE_URL ? true : false;
-
-// String de conexão: Usa a da nuvem (Render/Neon) ou a local
-const dbConnectionString = process.env.DATABASE_URL || 'postgres://postgres:1234L@localhost:5432/karmem_db';
-
-const pool = new Pool({
-    connectionString: dbConnectionString,
-    // Ativa SSL se estiver no Render OU se a URL for do Neon (mesmo rodando local)
-    ssl: (isProduction || dbConnectionString.includes('neon.tech')) 
-        ? { rejectUnauthorized: false } 
-        : false 
-});
-
-// TESTE DE CONEXÃO COM LOG DETALHADO
-pool.connect((err, client, release) => {
-    if (err) {
-        console.error('❌ ERRO CRÍTICO NA BASE DE DADOS:');
-        console.error('- Mensagem:', err.message);
-        console.error('- Detalhes:', err.stack.split('\n')[0]);
-        console.log('💡 DICA: Verifique se a senha no server.js está correta ou se a variável DATABASE_URL foi configurada no Render.');
-        return;
-    }
-    console.log('✅ CONEXÃO ESTABELECIDA: A base de dados está pronta para uso.');
-    release();
-});
-
-// ROTA PRINCIPAL
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-// --- ROTAS DA API ---
-
-// Estorno com atualização de stock (Transação SQL)
-app.delete('/api/sales/:id', async (req, res) => {
-    const { id } = req.params;
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
-        const items = await client.query('SELECT product_id, quantity FROM sale_items WHERE sale_id = $1', [id]);
-        for (const item of items.rows) {
-            if (item.product_id) {
-                await client.query('UPDATE products SET stock = stock + $1 WHERE id = $2', [item.quantity, item.product_id]);
+
+        if (is_update) {
+            // LÓGICA DE UPDATE (DAR BAIXA): 
+            // Atualiza apenas os campos financeiros e o prazo sem duplicar o ID.
+            // O valor 'down_payment' recebido já vem somado da interface.
+            await client.query(
+                `UPDATE sales 
+                 SET client_id = $1, payment_method = $2, subtotal = $3, 
+                     discount = $4, down_payment = $5, due_date = $6, 
+                     total_amount = $7 
+                 WHERE id = $8`,
+                [client_id, payment_method, subtotal, discount, down_payment, due_date, total_amount, id]
+            );
+
+            // Opcional: Atualizar os itens se necessário (em atualizações financeiras puras não costuma mudar)
+            await client.query('DELETE FROM sale_items WHERE sale_id = $1', [id]);
+            for (const item of items) {
+                await client.query(
+                    'INSERT INTO sale_items (sale_id, product_id, product_name, quantity, price_unit) VALUES ($1,$2,$3,$4,$5)',
+                    [id, item.id, item.name, item.qty, item.price]
+                );
+            }
+
+        } else {
+            // LÓGICA DE INSERÇÃO (VENDA NOVA):
+            await client.query(
+                `INSERT INTO sales (id, client_id, payment_method, subtotal, discount, down_payment, due_date, total_amount) 
+                 VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`, 
+                [id, client_id, payment_method, subtotal, discount, down_payment, due_date, total_amount]
+            );
+
+            // Grava os itens e REDUZ O STOCK (Apenas em vendas novas)
+            for (const item of items) {
+                await client.query(
+                    'INSERT INTO sale_items (sale_id, product_id, product_name, quantity, price_unit) VALUES ($1,$2,$3,$4,$5)',
+                    [id, item.id, item.name, item.qty, item.price]
+                );
+                await client.query(
+                    'UPDATE products SET stock = stock - $1 WHERE id = $2', 
+                    [item.qty, item.id]
+                );
             }
         }
-        await client.query('DELETE FROM sales WHERE id = $1', [id]);
+
         await client.query('COMMIT');
-        res.json({ success: true });
-    } catch (err) {
-        await client.query('ROLLBACK');
-        console.error('Erro no estorno:', err.message);
-        res.status(500).json({ error: err.message });
-    } finally {
-        client.release();
+        res.json({ success: true, message: is_update ? 'Baixa efetuada' : 'Venda registada' });
+    } catch (e) { 
+        await client.query('ROLLBACK'); 
+        console.error("Erro no Processamento de Venda:", e.message);
+        res.status(500).json({ error: e.message }); 
+    } finally { 
+        client.release(); 
     }
 });
 
+// ==========================================
+// ROTA DE PRODUTOS
+// ==========================================
 app.get('/api/products', async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM products ORDER BY name ASC');
@@ -86,12 +105,22 @@ app.post('/api/products', async (req, res) => {
             await pool.query('UPDATE products SET name=$1, size=$2, price=$3, stock=$4 WHERE id=$5', [name, size, price, stock, id]);
             res.json({ id });
         } else {
-            const result = await pool.query('INSERT INTO products (name, size, price, stock) VALUES ($1, $2, $3, $4) RETURNING id', [name, size, price, stock]);
+            const result = await pool.query('INSERT INTO products (name, size, price, stock) VALUES ($1,$2,$3,$4) RETURNING id', [name, size, price, stock]);
             res.json(result.rows[0]);
         }
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+app.delete('/api/products/:id', async (req, res) => {
+    try {
+        await pool.query('DELETE FROM products WHERE id = $1', [req.params.id]);
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ==========================================
+// ROTA DE CLIENTES
+// ==========================================
 app.get('/api/clients', async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM clients ORDER BY name ASC');
@@ -100,65 +129,53 @@ app.get('/api/clients', async (req, res) => {
 });
 
 app.post('/api/clients', async (req, res) => {
-    const c = req.body;
+    const { id, name, phone, cpf, m_bust, m_waist, m_hips, m_shoulder, m_sleeve } = req.body;
     try {
-        if (c.id) {
-            await pool.query('UPDATE clients SET name=$1, phone=$2, email=$3, cpf=$4, address=$5, m_bust=$6, m_waist=$7, m_hips=$8, m_shoulder=$9, m_sleeve=$10, m_length_up=$11, m_length_down=$12, notes=$13 WHERE id=$14', 
-            [c.name, c.phone, c.email, c.cpf, c.address, c.m_bust, c.m_waist, c.m_hips, c.m_shoulder, c.m_sleeve, c.m_length_up, c.m_length_down, c.notes, c.id]);
-            res.json({ id: c.id });
+        if (id) {
+            await pool.query(
+                `UPDATE clients SET name=$1, phone=$2, cpf=$3, m_bust=$4, m_waist=$5, m_hips=$6, m_shoulder=$7, m_sleeve=$8 
+                 WHERE id=$9`, 
+                [name, phone, cpf, m_bust, m_waist, m_hips, m_shoulder, m_sleeve, id]
+            );
+            res.json({ id });
         } else {
-            const result = await pool.query('INSERT INTO clients (name, phone, email, cpf, address, m_bust, m_waist, m_hips, m_shoulder, m_sleeve, m_length_up, m_length_down, notes) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING id', 
-            [c.name, c.phone, c.email, c.cpf, c.address, c.m_bust, c.m_waist, c.m_hips, c.m_shoulder, c.m_sleeve, c.m_length_up, c.m_length_down, c.notes]);
+            const result = await pool.query(
+                `INSERT INTO clients (name, phone, cpf, m_bust, m_waist, m_hips, m_shoulder, m_sleeve) 
+                 VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id`, 
+                [name, phone, cpf, m_bust, m_waist, m_hips, m_shoulder, m_sleeve]
+            );
             res.json(result.rows[0]);
         }
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.post('/api/sales', async (req, res) => {
-    const { id, client_id, paymentMethod, subtotal, discount, total, items } = req.body;
-    const client = await pool.connect();
-    try {
-        await client.query('BEGIN');
-        await client.query('INSERT INTO sales (id, client_id, payment_method, subtotal, discount, total_amount) VALUES ($1,$2,$3,$4,$5,$6)', [id, client_id, paymentMethod, subtotal, discount, total]);
-        for (const item of items) {
-            await client.query('INSERT INTO sale_items (sale_id, product_id, product_name, quantity, price_unit) VALUES ($1,$2,$3,$4,$5)', [id, item.id, item.name, item.qty, item.price]);
-            await client.query('UPDATE products SET stock = stock - $1 WHERE id = $2', [item.qty, item.id]);
-        }
-        await client.query('COMMIT');
-        res.json({ success: true });
-    } catch (e) { await client.query('ROLLBACK'); res.status(500).json({ error: e.message }); }
-    finally { client.release(); }
-});
-
-app.get('/api/sales/client/all', async (req, res) => {
-    try {
-        const result = await pool.query('SELECT s.*, c.name as client_name FROM sales s LEFT JOIN clients c ON s.client_id = c.id ORDER BY s.sale_date DESC');
-        for(let sale of result.rows) {
-            const items = await pool.query('SELECT * FROM sale_items WHERE sale_id = $1', [sale.id]);
-            sale.items = items.rows;
-        }
-        res.json(result.rows);
-    } catch (e) { res.status(500).json({ error: e.message }); }
-});
-
+// ==========================================
+// ROTA DE ORÇAMENTOS (QUOTES)
+// ==========================================
 app.get('/api/quotes', async (req, res) => {
     try {
-        const result = await pool.query('SELECT q.*, c.name as client_name FROM quotes q LEFT JOIN clients c ON q.client_id = c.id ORDER BY q.created_at DESC');
-        for(let q of result.rows) {
-            const items = await pool.query('SELECT * FROM quote_items WHERE quote_id = $1', [q.id]);
-            q.items = items.rows;
+        const result = await pool.query(`
+            SELECT q.*, c.name as client_name 
+            FROM quotes q 
+            LEFT JOIN clients c ON q.client_id = c.id 
+            ORDER BY created_at DESC
+        `);
+        // Para cada orçamento, buscar os seus itens
+        const quotes = result.rows;
+        for (let quote of quotes) {
+            const items = await pool.query('SELECT * FROM quote_items WHERE quote_id = $1', [quote.id]);
+            quote.items = items.rows;
         }
-        res.json(result.rows);
+        res.json(quotes);
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.post('/api/quotes', async (req, res) => {
-    const { id, client_id, subtotal, discount, total, items } = req.body;
+    const { id, client_id, total_amount, items } = req.body;
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
-        await client.query('DELETE FROM quotes WHERE id = $1', [id]);
-        await client.query('INSERT INTO quotes (id, client_id, subtotal, discount, total_amount) VALUES ($1,$2,$3,$4,$5)', [id, client_id, subtotal, discount, total]);
+        await client.query('INSERT INTO quotes (id, client_id, total_amount, status) VALUES ($1,$2,$3,$4)', [id, client_id, total_amount, 'Pendente']);
         for (const item of items) {
             await client.query('INSERT INTO quote_items (quote_id, product_id, product_name, quantity, price_unit) VALUES ($1,$2,$3,$4,$5)', [id, item.id, item.name, item.qty, item.price]);
         }
@@ -169,21 +186,53 @@ app.post('/api/quotes', async (req, res) => {
 });
 
 app.post('/api/quotes/:id/status', async (req, res) => {
-    const { id } = req.params;
-    const { status } = req.body;
     try {
-        await pool.query('UPDATE quotes SET status = $1 WHERE id = $2', [status, id]);
+        await pool.query('UPDATE quotes SET status = $1 WHERE id = $2', [req.body.status, req.params.id]);
         res.json({ success: true });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-app.delete('/api/:col/:id', async (req, res) => {
-    const { col, id } = req.params;
+app.delete('/api/quotes/:id', async (req, res) => {
     try {
-        await pool.query(`DELETE FROM ${col} WHERE id = $1`, [id]);
+        await pool.query('DELETE FROM quotes WHERE id = $1', [req.params.id]);
         res.json({ success: true });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Servidor Karmem Fardamentos rodando na porta ${PORT}`));
+// ==========================================
+// ROTA PARA RELATÓRIOS (SALES DETAILED)
+// ==========================================
+app.get('/api/sales/client/all', async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT s.*, c.name as client_name 
+            FROM sales s 
+            LEFT JOIN clients c ON s.client_id = c.id 
+            ORDER BY sale_date DESC
+        `);
+        const sales = result.rows;
+        for (let sale of sales) {
+            const items = await pool.query('SELECT * FROM sale_items WHERE sale_id = $1', [sale.id]);
+            sale.items = items.rows;
+        }
+        res.json(sales);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/api/sales/:id', async (req, res) => {
+    try {
+        // Estorno: Devolve o stock antes de apagar
+        const items = await pool.query('SELECT product_id, quantity FROM sale_items WHERE sale_id = $1', [req.params.id]);
+        for (const item of items.rows) {
+            await pool.query('UPDATE products SET stock = stock + $1 WHERE id = $2', [item.quantity, item.product_id]);
+        }
+        await pool.query('DELETE FROM sales WHERE id = $1', [req.params.id]);
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Inicia o Servidor
+app.listen(port, () => {
+    console.log(`--- SISTEMA KARMEM FARDAMENTOS LIGADO ---`);
+    console.log(`Endereço local: http://localhost:${port}`);
+});

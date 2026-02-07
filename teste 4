@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Karmem Fardamentos | Gestão de Excelência</title>
+    
+    <!-- Bibliotecas de Estilo e Ícones -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Bibliotecas de PDF, Gráficos e QR Code -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&display=swap');
+
+        :root { 
+            --primary: #6a0dad; 
+            --secondary: #4f46e5; 
+            --danger: #dc3545; 
+            --success: #198754; 
+            --warning: #f59e0b;
+            --text-dark: #1e293b;
+            --bg-light: #f8fafc;
+        }
+
+        body { background-color: var(--bg-light); font-family: 'Inter', sans-serif; color: var(--text-dark); font-size: 0.92rem; }
+        
+        .karmem-header { 
+            background: linear-gradient(135deg, var(--primary), var(--secondary)); 
+            color: white; padding: 1.2rem; border-bottom-left-radius: 2.2rem; border-bottom-right-radius: 2.2rem;
+            box-shadow: 0 10px 25px -5px rgba(106, 13, 173, 0.12);
+            margin-bottom: 25px;
+        }
+        
+        .nav-pills .nav-link { color: #64748b; font-weight: 600; border-radius: 10px; margin: 0 4px; padding: 0.5rem 1rem; transition: all 0.2s; font-size: 0.85rem; }
+        .nav-pills .nav-link.active { background-color: var(--primary) !important; color: white !important; box-shadow: 0 4px 10px rgba(106, 13, 173, 0.12); }
+
+        .glass-card { background: white; border-radius: 20px; border: 1px solid #f1f5f9; padding: 1.2rem; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02); }
+        
+        .card-product { 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            cursor: pointer; border-radius: 15px; border: 1px solid #f1f5f9; 
+            background: #ffffff; padding: 8px;
+        }
+        .card-product:hover { transform: translateY(-3px); border-color: var(--primary); box-shadow: 0 10px 18px -8px rgba(106, 13, 173, 0.15); }
+        
+        .btn-brand { background: var(--primary); color: white; border-radius: 10px; font-weight: 600; transition: all 0.3s; border: none; font-size: 0.9rem; }
+        .btn-brand:hover:not(:disabled) { background: #5a0b94; transform: translateY(-1px); box-shadow: 0 6px 12px rgba(106, 13, 173, 0.2); }
+        .btn-brand:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .cart-item { background: #fdfcff; border: 1px solid #f1f0f7; border-radius: 10px; padding: 10px; margin-bottom: 6px; font-size: 0.85rem; }
+        .measurement-label { font-size: 0.65rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
+        .section-title { font-size: 0.9rem; font-weight: 800; color: var(--primary); border-bottom: 1px solid #f1f5f9; padding-bottom: 4px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        @media print {
+            .no-print, .modal, .modal-backdrop { display: none !important; }
+            body { background: white; margin: 0 !important; padding: 0 !important; }
+            #label-print-area:not(:empty) { display: block !important; width: 40mm; height: 60mm; margin: 0; padding: 1mm; }
+            #thermal-receipt:not(:empty) { 
+                display: block !important; width: 48mm; margin: 0; padding: 0mm;
+                font-family: 'Courier New', Courier, monospace; 
+                font-size: 11px; font-weight: 700; line-height: 1.1; color: #000 !important;
+                position: absolute; top: 0; left: 0;
+            }
+            @page { margin: 0; size: auto; }
+        }
+
+        #thermal-receipt, #label-print-area { display: none; }
+        .receipt-sep { border-bottom: 1px dashed #000; margin: 3px 0; }
+        .receipt-row { display: flex; justify-content: space-between; }
+        
+        .qty-btn { 
+            width: 26px; height: 26px; border-radius: 6px; border: 1px solid #e2e8f0; 
+            display: flex; align-items: center; justify-content: center; 
+            background: white; color: var(--primary); transition: all 0.2s;
+            font-size: 1rem;
+        }
+        .qty-btn:hover { background: var(--primary); color: white; }
+
+        #feedback-msg {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999;
+            padding: 0.8rem 2rem; border-radius: 12px; font-weight: 700;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: none; transition: all 0.3s; font-size: 1rem;
+            text-align: center; min-width: 320px;
+        }
+
+        .required-pulse { border: 2px solid var(--danger) !important; animation: border-glow 1.5s infinite; }
+        @keyframes border-glow { 0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); } }
+        
+        .updating-badge { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+    </style>
+</head>
+<body>
+
+    <div id="feedback-msg"></div>
+
+    <header class="karmem-header text-center no-print">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div style="width: 35px; height: 35px;" class="bg-white rounded-circle d-flex align-items-center justify-content-center shadow-md">
+                <i class="bi bi-intersect text-primary fs-5"></i>
+            </div>
+            <div>
+                <h1 class="h5 fw-bold m-0" style="font-family: 'Playfair Display', serif; letter-spacing: -0.3px;">Karmem Fardamentos</h1>
+                <p class="small opacity-90 m-0 font-bold tracking-widest uppercase" style="font-size: 0.6rem;">Alta Costura & Atelier de Luxo</p>
+            </div>
+            <div id="connection-status" class="bg-danger text-white p-1 rounded-pill px-4 shadow-sm fw-bold" style="font-size: 0.7rem;">OFFLINE</div>
+        </div>
+    </header>
+
+    <div class="container pb-5 no-print">
+        <ul class="nav nav-pills mb-4 justify-content-center bg-white p-2 rounded-4 shadow-sm border border-light">
+            <li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#tab-vendas" id="nav-vendas-link">Vendas</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tab-orcamentos">Orçamentos</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tab-estoque">Estoque</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tab-clientes">Clientes</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tab-relatorios" onclick="window.initDashboard()">Relatórios</a></li>
+        </ul>
+
+        <div class="tab-content">
+            <!-- ABA VENDAS -->
+            <div class="tab-pane fade show active" id="tab-vendas">
+                <div class="row g-4">
+                    <div class="col-lg-8">
+                        <div class="glass-card h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h6 class="fw-bold m-0 text-slate-700" style="font-size: 0.95rem;"><i class="bi bi-qr-code-scan me-2"></i>Leitura de Código</h6>
+                                <input type="text" id="search-pos" class="form-control w-50 rounded-pill shadow-none border-light bg-slate-50 py-2" style="font-size: 0.9rem;" placeholder="Aponte o scanner..." oninput="window.handleSearchInput(event)" autofocus>
+                            </div>
+                            <div id="pos-grid" class="row g-3"></div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="glass-card sticky-top border-2 border-primary border-opacity-10" style="top: 20px;">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="fw-bold text-primary m-0" style="font-family: 'Playfair Display', serif; font-size: 1.2rem;">Checkout</h5>
+                                <button onclick="window.clearCart()" class="btn btn-sm btn-outline-danger border-0 rounded-pill" title="Limpar tudo"><i class="bi bi-trash"></i></button>
+                            </div>
+
+                            <div id="edit-sale-badge" class="alert updating-badge py-1 px-2 small mb-2 d-none rounded-3" style="font-size: 0.75rem;">
+                                <i class="bi bi-pencil-fill me-1"></i> Atualizando Venda <span id="edit-sale-id-text"></span>
+                            </div>
+                            
+                            <div class="mb-2">
+                                <label class="stat-label">Cliente Responsável</label>
+                                <select id="client-select-pos" class="form-select form-select-sm border-light shadow-none bg-slate-50"></select>
+                            </div>
+                            
+                            <div class="row g-2 mb-2">
+                                <div class="col-6">
+                                    <label class="stat-label">Pagamento</label>
+                                    <select id="payment-method-pos" class="form-select form-select-sm border-light shadow-none bg-slate-50">
+                                        <option value="Dinheiro">💵 Dinheiro</option>
+                                        <option value="PIX">📱 PIX</option>
+                                        <option value="Cartão">💳 Cartão</option>
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <label class="stat-label text-danger" id="label-due-date">Previsão Restante</label>
+                                    <input type="date" id="due-date-pos" class="form-control form-select-sm border-light shadow-none bg-slate-50" style="font-size: 0.75rem;">
+                                </div>
+                            </div>
+
+                            <div class="row g-2 mb-3">
+                                <div class="col-7">
+                                    <label class="stat-label">Desconto</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" id="discount-pos" class="form-control border-light shadow-none bg-slate-50" placeholder="0" oninput="window.updateCartUI()">
+                                        <select id="discount-type-pos" class="form-select border-light shadow-none bg-slate-100" style="max-width: 65px;" onchange="window.updateCartUI()">
+                                            <option value="cash">R$</option>
+                                            <option value="percent">%</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-5">
+                                    <label class="stat-label text-success" id="label-payment-input">Sinal (R$)</label>
+                                    <input type="number" id="sinal-pos" class="form-control form-control-sm border-light shadow-none bg-slate-50" placeholder="0.00" oninput="window.updateCartUI()">
+                                </div>
+                            </div>
+
+                            <label class="stat-label">Carrinho</label>
+                            <div id="cart-items" class="mb-3 border-bottom pb-2 overflow-auto" style="max-height: 180px; min-height: 60px;"></div>
+                            
+                            <div class="pt-1 bg-slate-50 p-2 rounded-3 border border-light shadow-sm">
+                                <div class="d-flex justify-content-between small text-muted"><span>Subtotal:</span><span id="cart-subtotal">R$ 0,00</span></div>
+                                <div class="d-flex justify-content-between small text-danger"><span>Desconto:</span><span id="cart-discount-val">- R$ 0,00</span></div>
+                                <div class="d-flex justify-content-between fw-bold text-slate-700 mt-1 border-top pt-1">
+                                    <span>Total da Venda:</span>
+                                    <span id="cart-total-final">R$ 0,00</span>
+                                </div>
+                                <div id="summary-already-paid-row" class="d-flex justify-content-between small text-success mt-1 d-none">
+                                    <span>Já Pago Anteriormente:</span>
+                                    <span id="cart-already-paid">R$ 0,00</span>
+                                </div>
+                                <div class="d-flex justify-content-between small text-primary mt-1">
+                                    <span id="summary-payment-label">Receber Agora:</span>
+                                    <span id="cart-sinal-val">R$ 0,00</span>
+                                </div>
+                                <div class="d-flex justify-content-between h6 fw-bold text-primary mt-2 mb-0 border-top border-dashed pt-1">
+                                    <span id="total-label-ui">Restante a Pagar:</span>
+                                    <span id="cart-balance">R$ 0,00</span>
+                                </div>
+                            </div>
+
+                            <div id="edit-mode-badge" class="alert alert-warning py-1 px-3 small mb-2 d-none rounded-3 mt-2" style="font-size: 0.75rem;"><i class="bi bi-pencil-square me-1"></i> Editando Orçamento</div>
+                            
+                            <div class="d-grid gap-2 mt-3">
+                                <button class="btn btn-brand py-2 shadow-sm d-flex align-items-center justify-content-center" id="btn-finish" disabled onclick="window.handleTransaction('sale')">
+                                    <span id="btn-finish-text">FINALIZAR VENDA</span>
+                                </button>
+                                <button class="btn btn-outline-secondary py-2 rounded-3 fw-bold" style="font-size: 0.8rem;" id="btn-quote" disabled onclick="window.handleTransaction('quote')">SALVAR ORÇAMENTO</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABELAS MANTIDAS -->
+            <div class="tab-pane fade" id="tab-orcamentos">
+                <div class="glass-card">
+                    <h5 class="fw-bold mb-4 text-primary" style="font-family: 'Playfair Display', serif; font-size: 1.3rem;">Orçamentos Registados</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle" style="font-size: 0.85rem;">
+                            <thead class="text-muted small uppercase"><tr><th>Ref</th><th>Data</th><th>Cliente</th><th>Valor</th><th class="text-center">Status</th><th class="text-center">Exportar</th><th class="text-end">Ações</th></tr></thead>
+                            <tbody id="all-quotes-table"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="tab-relatorios">
+                <div class="row g-3 mb-4">
+                    <div class="col-6 col-md-3"><div class="stat-card shadow-sm"><span class="stat-label">Hoje</span><p class="stat-value text-primary" id="stat-today">R$ 0,00</p></div></div>
+                    <div class="col-6 col-md-3"><div class="stat-card shadow-sm" style="border-left-color: var(--success);"><span class="stat-label">Este Mês</span><p class="stat-value text-success" id="stat-month">R$ 0,00</p></div></div>
+                    <div class="col-6 col-md-3"><div class="stat-card shadow-sm" style="border-left-color: var(--warning);"><span class="stat-label">Vencendo Hoje</span><p class="stat-value text-warning" id="stat-due-today">0</p></div></div>
+                    <div class="col-6 col-md-3"><div class="stat-card shadow-sm" style="border-left-color: var(--danger);"><span class="stat-label">Total Pendente</span><p class="stat-value text-danger" id="stat-pending">R$ 0,00</p></div></div>
+                </div>
+                <div id="payment-alerts-container" class="mb-4"></div>
+                <div class="row g-4">
+                    <div class="col-lg-12">
+                        <div class="glass-card mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h6 class="fw-bold m-0 fs-6"><i class="bi bi-file-earmark-bar-graph me-2 text-primary"></i>Análise de Transações</h6>
+                                <div class="d-flex gap-2">
+                                    <select id="report-filter-type" class="form-select form-select-sm shadow-none border-light bg-slate-50" onchange="window.initDashboard()">
+                                        <option value="all">Todas as Vendas</option>
+                                        <option value="debt">Apenas Pendentes</option>
+                                    </select>
+                                    <input type="month" id="report-month-filter" class="form-control form-control-sm shadow-none border-light bg-slate-50 w-auto" onchange="window.initDashboard()">
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table report-table align-middle">
+                                    <thead><tr><th>Data</th><th>Ref</th><th>Cliente</th><th class="text-end">V. Total</th><th class="text-end text-success">Sinal / Pago</th><th class="text-end text-danger">A Pagar</th><th class="text-center">Vencimento</th><th class="text-center">Ações</th></tr></thead>
+                                    <tbody id="detailed-sales-list"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="tab-estoque">
+                <div class="glass-card">
+                    <h5 class="fw-bold mb-4 text-primary" style="font-family: 'Playfair Display', serif;">Gestão de Stock</h5>
+                    <form id="form-product" class="row g-2 mb-4 bg-slate-50 p-3 rounded-4 border shadow-sm">
+                        <input type="hidden" id="p-id"><div class="col-md-5"><input type="text" id="p-name" class="form-control py-2 fs-6" placeholder="Artigo" required></div><div class="col-md-2"><select id="p-size" class="form-select py-2 fs-6"><option>P</option><option>M</option><option>G</option><option>GG</option><option>EG</option></select></div><div class="col-md-2"><input type="number" id="p-price" class="form-control py-2 fs-6" step="0.01" placeholder="Preço" required></div><div class="col-md-2"><input type="number" id="p-stock" class="form-control py-2 fs-6" placeholder="Qtd" required></div><div class="col-md-1"><button type="submit" class="btn btn-brand w-100 py-2 shadow-sm"><i class="bi bi-save"></i></button></div>
+                    </form>
+                    <div class="table-responsive"><table class="table table-hover align-middle" style="font-size: 0.9rem;"><tbody id="inventory-table"></tbody></table></div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="tab-clientes">
+                <div class="glass-card">
+                    <h5 class="fw-bold mb-4 text-primary" style="font-family: 'Playfair Display', serif;">Ficha Técnica de Clientes</h5>
+                    <form id="form-client" class="bg-slate-50 p-3 rounded-4 border mb-5 shadow-sm">
+                        <input type="hidden" id="c-id">
+                        <div class="row g-3 mb-4"><div class="col-md-6"><label class="measurement-label">Nome Completo</label><input type="text" id="c-name" class="form-control py-2 fs-6 rounded-3" required></div><div class="col-md-3"><label class="measurement-label">WhatsApp</label><input type="text" id="c-phone" class="form-control py-2 fs-6 rounded-3"></div><div class="col-md-3"><label class="measurement-label">CPF/CNPJ</label><input type="text" id="c-cpf" class="form-control py-2 fs-6 rounded-3"></div></div>
+                        <div class="section-title">Medidas (cm)</div>
+                        <div class="row g-3"><div class="col-4 col-md-2"><label class="measurement-label">Busto</label><input type="number" id="m-bust" class="form-control py-1"></div><div class="col-4 col-md-2"><label class="measurement-label">Cintura</label><input type="number" id="m-waist" class="form-control py-1"></div><div class="col-4 col-md-2"><label class="measurement-label">Quadril</label><input type="number" id="m-hips" class="form-control py-1"></div><div class="col-4 col-md-2"><label class="measurement-label">Ombro</label><input type="number" id="m-shoulder" class="form-control py-1"></div><div class="col-4 col-md-2"><label class="measurement-label">Manga</label><input type="number" id="m-sleeve" class="form-control py-1"></div></div>
+                        <div class="d-flex justify-content-end mt-4"><button type="submit" class="btn btn-brand px-5 py-2 shadow-sm">GUARDAR FICHA</button></div>
+                    </form>
+                    <div class="table-responsive"><table class="table table-hover border rounded shadow-sm" style="font-size: 0.9rem;"><tbody id="clients-table"></tbody></table></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ETIQUETA -->
+    <div class="modal fade" id="modal-label" tabindex="-1"><div class="modal-dialog modal-sm modal-dialog-centered"><div class="modal-content border-0 shadow-lg" style="border-radius: 24px;"><div class="modal-body p-4 text-center"><h6 class="fw-bold mb-3" style="font-size: 1rem;">Etiqueta do Artigo</h6><div id="label-wrapper-modal" class="bg-white p-3 border rounded-4 shadow-sm"><div id="label-preview" style="width: 40mm; height: 60mm; margin: 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: space-between;"><div style="font-size: 10px; font-weight: 800; color: #6a0dad; border-bottom: 2px solid #6a0dad; width: 100%; padding-bottom: 4px;">KARMEM FARDAMENTOS</div><div id="label-name" style="font-size: 12px; font-weight: 700; margin-top: 5px; line-height: 1.1;">PRODUTO</div><div style="font-size: 8px; margin: 4px 0;">TAMANHO: <b id="label-size">M</b></div><div id="qrcode" style="margin: 6px 0; display: inline-block;"></div><div style="font-size: 8px; color: #777;">ID: <span id="label-id">000</span></div><div id="label-price" style="font-size: 14px; font-weight: 900; background: #6a0dad; color: white; width: 100%; padding: 4px 0; border-radius: 4px;">R$ 0,00</div></div></div><div class="d-grid gap-2 mt-4"><button onclick="window.printCurrentLabel()" class="btn btn-brand py-2 shadow-sm">Imprimir</button><button data-bs-dismiss="modal" class="btn btn-light border py-2">Fechar</button></div></div></div></div></div>
+
+    <div id="label-print-area"></div>
+    <div id="thermal-receipt"></div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+
+        let db = { products: [], clients: [], sales: [], quotes: [] };
+        let cart = [];
+        window.currentEditQuoteId = null;
+        window.currentEditSaleId = null;
+        window.alreadyPaidAmount = 0; 
+
+        function showMessage(msg, type='success') {
+            const el = document.getElementById('feedback-msg');
+            if(!el) return;
+            el.innerText = msg;
+            el.style.backgroundColor = type === 'success' ? 'var(--success)' : 'var(--danger)';
+            el.style.color = 'white';
+            el.style.display = 'block';
+            setTimeout(() => { el.style.display = 'none'; }, 5000);
+        }
+
+        async function api(path, method = 'GET', body = null) {
+            try {
+                const options = { 
+                    method, 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: body ? JSON.stringify(body) : null 
+                };
+                const res = await fetch(`${API_URL}${path}`, options);
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.error || `Erro de Servidor (${res.status})`);
+                }
+                updateStatus(true);
+                return data;
+            } catch (e) { 
+                updateStatus(false); 
+                console.error("API Error:", e.message);
+                return { error: e.message }; 
+            }
+        }
+
+        function updateStatus(online) {
+            const b = document.getElementById('connection-status');
+            if(b) {
+                b.innerText = online ? 'ONLINE' : 'OFFLINE';
+                b.className = `p-1 rounded-pill px-4 shadow-sm ${online ? 'bg-success' : 'bg-danger'} text-white fw-bold`;
+            }
+        }
+
+        async function loadAllData() {
+            const [p, c, q, s] = await Promise.all([api('/products'), api('/clients'), api('/quotes'), api('/sales/client/all')]);
+            db.products = Array.isArray(p) ? p : []; 
+            db.clients = Array.isArray(c) ? c : []; 
+            db.quotes = Array.isArray(q) ? q : []; 
+            db.sales = Array.isArray(s) ? s : [];
+            window.render();
+        }
+
+        window.handleSearchInput = (e) => {
+            const search = e.target.value.trim();
+            if (!search) return;
+            const exact = db.products.find(p => String(p.id) === search);
+            if (exact) { window.addToCart(exact.id); e.target.value = ""; e.target.focus(); }
+            window.render();
+        };
+
+        window.render = () => {
+            const searchInput = document.getElementById('search-pos');
+            const search = searchInput ? searchInput.value.toLowerCase().trim() : "";
+            const posGrid = document.getElementById('pos-grid');
+            
+            if (!search) {
+                posGrid.innerHTML = `<div class="col-12 py-5 text-center text-muted opacity-40"><i class="bi bi-qr-code-scan fs-1"></i><h6 class="mt-2 fs-5">Scanner Pronto</h6></div>`;
+            } else {
+                const filtered = db.products.filter(p => p.name.toLowerCase().includes(search) || String(p.id) === search);
+                posGrid.innerHTML = filtered.map(p => {
+                    const price = Number(p.price) || 0;
+                    return `<div class="col-md-4 col-6"><div class="card card-product border-light shadow-sm h-100 ${p.stock <= 0 ? 'opacity-50 grayscale' : ''}" onclick="${p.stock > 0 ? `window.addToCart(${p.id})` : ''}"><div class="card-body p-3 text-center"><span class="badge bg-primary bg-opacity-10 text-primary mb-2" style="font-size: 0.7rem;">Tam. ${p.size}</span><h6 class="fw-bold text-truncate mb-2" style="font-size: 0.85rem;">${p.name}</h6><div class="fw-bold text-primary" style="font-size: 0.95rem;">R$ ${price.toFixed(2)}</div></div></div></div>`
+                }).join('') || '<div class="col-12 text-center text-muted py-4 small">Nenhum resultado...</div>';
+            }
+            
+            document.getElementById('inventory-table').innerHTML = db.products.map(p => `<tr class="stock-row"><td><b>${p.name}</b> (${p.size})</td><td>R$ ${(Number(p.price) || 0).toFixed(2)}</td><td><b>${p.stock}</b></td><td class="text-end"><div class="btn-group border rounded shadow-sm overflow-hidden"><button onclick="window.generateLabel(${p.id})" class="btn btn-sm btn-light text-primary border-0 px-3"><i class="bi bi-qr-code"></i></button><button onclick="window.editProd(${p.id})" class="btn btn-sm btn-light border-0 border-start px-3"><i class="bi bi-pencil"></i></button><button onclick="window.deleteDoc('products', ${p.id})" class="btn btn-sm btn-light text-danger border-0 border-start px-3"><i class="bi bi-trash"></i></button></div></td></tr>`).join('');
+            document.getElementById('clients-table').innerHTML = db.clients.map(c => `<tr><td class="fw-bold fs-6">${c.name}</td><td>${c.phone || '-'}</td><td>${c.cpf || '-'}</td><td class="text-end"><button onclick="window.editCli(${c.id})" class="btn btn-sm btn-light border shadow-sm px-4 py-1">Ficha</button></td></tr>`).join('');
+            
+            document.getElementById('all-quotes-table').innerHTML = db.quotes.map(q => `<tr><td class="fw-bold">ORC-${String(q.id).split('-').pop()}</td><td><small>${(q.created_at || '').split('T')[0] || (q.date || '').split(',')[0]}</small></td><td class="fw-medium">${q.client_name || 'Particular'}</td><td><b class="text-primary">R$ ${(Number(q.total_amount || q.total)||0).toFixed(2)}</b></td><td class="text-center"><span class="badge bg-secondary bg-opacity-10 text-secondary">${q.status}</span></td><td class="text-center"><div class="btn-group border rounded shadow-sm"><button onclick="window.printFormalPDF('${q.id}')" class="btn btn-sm btn-light text-primary px-3" title="PDF"><i class="bi bi-file-earmark-pdf-fill"></i></button><button onclick="window.shareQuote('${q.id}')" class="btn btn-sm btn-light text-success px-3" title="Zap"><i class="bi bi-whatsapp"></i></button></div></td><td class="text-end"><div class="btn-group border rounded shadow-sm"><button onclick="window.updateQuoteStatus('${q.id}', 'Aprovado')" class="btn btn-sm btn-light text-success px-3"><i class="bi bi-check-circle-fill"></i></button><button onclick="window.loadQuoteForEdit('${q.id}')" class="btn btn-sm btn-light text-primary px-3"><i class="bi bi-pencil-square"></i></button><button onclick="window.deleteDoc('quotes', '${q.id}')" class="btn btn-sm btn-light text-danger px-3"><i class="bi bi-trash3"></i></button></div></td></tr>`).join('');
+
+            const opts = '<option value="">Particular / Balcão</option>' + db.clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            document.getElementById('client-select-pos').innerHTML = opts;
+        }
+
+        window.initDashboard = async () => {
+            const filterMonth = document.getElementById('report-month-filter').value || new Date().toISOString().slice(0, 7);
+            const filterType = document.getElementById('report-filter-type').value;
+            const s = await api('/sales/client/all'); db.sales = Array.isArray(s) ? s : [];
+            
+            let monthly = db.sales.filter(v => (v.sale_date || v.date || "").startsWith(filterMonth));
+            if (filterType === 'debt') monthly = monthly.filter(v => (parseFloat(v.total_amount) - parseFloat(v.down_payment)) > 0.01);
+
+            let totalM = 0, totalToday = 0, totalDueToday = 0, totalPending = 0;
+            const today = new Date().toISOString().split('T')[0];
+            const alertsHtml = [];
+
+            document.getElementById('detailed-sales-list').innerHTML = monthly.map(v => {
+                const total = parseFloat(v.total_amount || v.total) || 0;
+                const sinal = parseFloat(v.down_payment) || 0;
+                const balance = total - sinal;
+                const d = (v.sale_date || v.date || "").split('T')[0];
+                const dueDate = v.due_date ? v.due_date.split('T')[0] : null;
+
+                totalM += total;
+                totalPending += balance;
+                if (d === today) totalToday += total;
+                
+                let dueDateClass = 'text-muted';
+                if(balance > 0.01 && dueDate) {
+                    if(dueDate === today) {
+                        dueDateClass = 'text-warning fw-bold pulse-alert';
+                        totalDueToday++;
+                        alertsHtml.push(`<div class="alert alert-warning py-2 mb-2 shadow-sm d-flex justify-content-between align-items-center"><span><i class="bi bi-alarm me-2"></i><b>${v.client_name || 'Balcão'}</b> deve R$ ${balance.toFixed(2)} hoje!</span><button onclick="window.shareQuote('${v.id}')" class="btn btn-sm btn-warning"><i class="bi bi-whatsapp me-1"></i>Avisar</button></div>`);
+                    } else if(dueDate < today) {
+                        dueDateClass = 'text-danger fw-bold';
+                        alertsHtml.push(`<div class="alert alert-danger py-2 mb-2 shadow-sm d-flex justify-content-between align-items-center"><span><i class="bi bi-exclamation-triangle me-2"></i><b>${v.client_name || 'Balcão'}</b> em atraso!</span><button onclick="window.shareQuote('${v.id}')" class="btn btn-sm btn-danger"><i class="bi bi-whatsapp me-1"></i>Cobrar</button></div>`);
+                    }
+                }
+
+                return `<tr>
+                    <td><small>${d}</small></td>
+                    <td class="fw-bold font-monospace">#${String(v.id).split('-').pop()}</td>
+                    <td>${v.client_name ? `<b>${v.client_name}</b>` : '<span class="text-muted italic">Balcão</span>'}</td>
+                    <td class="text-end fw-bold">R$ ${total.toFixed(2)}</td>
+                    <td class="text-end text-success">R$ ${sinal.toFixed(2)}</td>
+                    <td class="text-end ${balance > 0.01 ? 'text-danger fw-bold' : 'text-muted'}">R$ ${balance.toFixed(2)}</td>
+                    <td class="text-center ${dueDateClass}">${dueDate ? dueDate.split('-').reverse().join('/') : '-'}</td>
+                    <td class="text-center">
+                        <div class="btn-group">
+                            <button onclick="window.reprintSale('${v.id}')" class="btn btn-sm text-primary p-0 me-2" title="Imprimir Cupão"><i class="bi bi-printer fs-5"></i></button>
+                            ${balance > 0.01 ? `<button onclick="window.loadSaleForEdit('${v.id}')" class="btn btn-sm text-warning p-0 me-2" title="Dar Baixa"><i class="bi bi-cash-stack fs-5"></i></button>` : ''}
+                            <button onclick="window.cancelSale('${v.id}')" class="btn btn-sm text-danger p-0"><i class="bi bi-arrow-counterclockwise fs-5"></i></button>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('') || '<tr><td colspan="8" class="text-center py-5 text-muted">Sem transações no período.</td></tr>';
+
+            document.getElementById('payment-alerts-container').innerHTML = alertsHtml.join('');
+            document.getElementById('stat-today').innerText = `R$ ${totalToday.toFixed(2)}`;
+            document.getElementById('stat-month').innerText = `R$ ${totalM.toFixed(2)}`;
+            document.getElementById('stat-due-today').innerText = totalDueToday;
+            document.getElementById('stat-pending').innerText = `R$ ${totalPending.toFixed(2)}`;
+        };
+
+        window.cancelSale = async (id) => {
+            const reason = prompt(`ESTORNO DE VENDA #${id}\nJustificativa:`);
+            if (!reason) return;
+            if (confirm("Confirmar estorno?")) {
+                const res = await api(`/sales/${id}`, 'DELETE', { reason });
+                if (res && !res.error) { showMessage("Venda estornada!"); await loadAllData(); window.initDashboard(); }
+            }
+        };
+
+        window.reprintSale = (id) => {
+            const v = db.sales.find(s => String(s.id) === String(id));
+            if (v) { window.printThermalReceipt(v); }
+        };
+
+        window.loadSaleForEdit = (id) => {
+            const v = db.sales.find(x => String(x.id) === String(id));
+            if (!v) return;
+            window.clearCart();
+            window.currentEditSaleId = v.id;
+            window.alreadyPaidAmount = parseFloat(v.down_payment) || 0; 
+            
+            document.getElementById('edit-sale-badge').classList.remove('d-none');
+            document.getElementById('edit-sale-id-text').innerText = '#' + String(v.id).split('-').pop();
+            
+            cart = v.items.map(i => ({ id: i.product_id, name: i.product_name, qty: i.quantity, price: Number(i.price_unit) }));
+            document.getElementById('client-select-pos').value = v.client_id || "";
+            document.getElementById('discount-pos').value = v.discount || 0;
+            document.getElementById('sinal-pos').value = 0;
+            document.getElementById('label-payment-input').innerText = "Receber Agora (R$)";
+            document.getElementById('due-date-pos').value = v.due_date ? v.due_date.split('T')[0] : "";
+            window.updateCartUI();
+            bootstrap.Tab.getOrCreateInstance(document.getElementById('nav-vendas-link')).show();
+            showMessage("Carregado para dar baixa!");
+        };
+
+        window.printThermalReceipt = (v) => {
+            const container = document.getElementById('thermal-receipt');
+            container.innerHTML = ""; 
+            const total = parseFloat(v.total_amount || v.total) || 0;
+            const sinal = parseFloat(v.down_payment) || 0;
+            const balance = total - sinal;
+            const dateStr = (v.sale_date || v.date || "").split('T')[0] || new Date().toLocaleDateString('pt-BR');
+            
+            let html = `<div style="text-align:center;"><b style="font-size:14px;">KARMEM FARDAMENTOS</b><br>ALTA COSTURA<br>----------------------------<br><b style="font-size:10px;">CUPOM NÃO FISCAL</b></div><div class="receipt-sep"></div>REF: ${v.id}<br>DATA: ${dateStr}<br>CLI: ${(v.client_name || 'Particular').toUpperCase()}<br><div class="receipt-sep"></div>`;
+                
+            (v.items || []).forEach(i => {
+                const n = (i.product_name || i.name || "Item").toUpperCase().substring(0, 12);
+                html += `<div class="receipt-row"><span>${n}</span><span>${i.quantity}</span><span>R$ ${(i.quantity * (i.price_unit || i.price)).toFixed(2)}</span></div>`;
+            });
+            
+            html += `<div class="receipt-sep"></div><div class="receipt-row"><b>TOTAL:</b><b>R$ ${total.toFixed(2)}</b></div>`;
+            if(sinal > 0) {
+                html += `<div class="receipt-row text-success"><span>PAGO:</span><span>-R$ ${sinal.toFixed(2)}</span></div><div class="receipt-row fw-bold"><span>RESTANTE:</span><span>R$ ${balance.toFixed(2)}</span></div>`;
+            }
+            html += `<div class="receipt-sep"></div><div style="text-align:center; margin-top:8px; font-size:10px;">OBRIGADO PELA PREFERÊNCIA!</div><br>.`;
+            container.innerHTML = html; window.print();
+        };
+
+        window.addToCart = (id) => { 
+            const p = db.products.find(x => Number(x.id) === Number(id)); if (!p) return;
+            const inC = cart.find(x => Number(x.id) === Number(id)); 
+            if (inC) inC.qty++; else cart.push({ ...p, qty: 1, price: Number(p.price) || 0 });
+            window.updateCartUI(); 
+        };
+
+        window.changeQty = (idx, delta) => {
+            cart[idx].qty += delta;
+            if (cart[idx].qty <= 0) cart.splice(idx, 1);
+            window.updateCartUI();
+        };
+
+        window.updateCartUI = () => {
+            const subtotal = cart.reduce((acc, i) => acc + ((Number(i.price) || 0) * (i.qty || 0)), 0);
+            const discountInput = Number(document.getElementById('discount-pos').value) || 0;
+            const discountType = document.getElementById('discount-type-pos').value;
+            let discount = discountType === 'percent' ? (subtotal * discountInput) / 100 : discountInput;
+            const paymentNow = Number(document.getElementById('sinal-pos').value) || 0;
+            const total_final = subtotal - discount;
+
+            document.getElementById('cart-subtotal').innerText = `R$ ${subtotal.toFixed(2)}`;
+            document.getElementById('cart-discount-val').innerText = `- R$ ${discount.toFixed(2)}`;
+            document.getElementById('cart-total-final').innerText = `R$ ${total_final.toFixed(2)}`;
+            
+            const paidRow = document.getElementById('summary-already-paid-row');
+            if (window.currentEditSaleId) {
+                paidRow.classList.remove('d-none');
+                document.getElementById('cart-already-paid').innerText = `R$ ${window.alreadyPaidAmount.toFixed(2)}`;
+                document.getElementById('summary-payment-label').innerText = "Pagando Agora:";
+                document.getElementById('cart-sinal-val').innerText = `+ R$ ${paymentNow.toFixed(2)}`;
+            } else {
+                paidRow.classList.add('d-none');
+                document.getElementById('summary-payment-label').innerText = "Valor Pago (Sinal):";
+                document.getElementById('cart-sinal-val').innerText = `R$ ${paymentNow.toFixed(2)}`;
+            }
+
+            const totalPaidToDate = (window.currentEditSaleId ? window.alreadyPaidAmount : 0) + paymentNow;
+            const balance = total_final - totalPaidToDate;
+            document.getElementById('cart-balance').innerText = `R$ ${Math.max(0, balance).toFixed(2)}`;
+
+            document.getElementById('cart-items').innerHTML = cart.map((i, idx) => `
+                <div class="cart-item d-flex justify-content-between align-items-center">
+                    <div><b>${i.name}</b><br><small class="text-muted">Tam: ${i.size}</small></div>
+                    <div class="d-flex align-items-center gap-2"><button onclick="window.changeQty(${idx}, -1)" class="qty-btn">-</button><b>${i.qty}</b><button onclick="window.changeQty(${idx}, 1)" class="qty-btn">+</button></div>
+                </div>`).join('') || '<div class="text-center py-4">Checkout Vazio</div>';
+            
+            const btnFinish = document.getElementById('btn-finish');
+            btnFinish.disabled = cart.length === 0;
+            btnFinish.innerText = window.currentEditSaleId ? "DAR BAIXA NO RESTANTE" : "FINALIZAR VENDA";
+            document.getElementById('btn-quote').disabled = cart.length === 0 || window.currentEditSaleId !== null;
+        };
+
+        window.handleTransaction = async (type) => {
+            const subtotal = cart.reduce((acc, i) => acc + ((Number(i.price) || 0) * (i.qty || 0)), 0);
+            const discountInput = Number(document.getElementById('discount-pos').value) || 0;
+            const discountType = document.getElementById('discount-type-pos').value;
+            let discount = discountType === 'percent' ? (subtotal * discountInput) / 100 : discountInput;
+            let paymentNow = Number(document.getElementById('sinal-pos').value) || 0;
+            const total_amount = subtotal - discount;
+            const dueDateRaw = document.getElementById('due-date-pos').value;
+            const clientIdRaw = document.getElementById('client-select-pos').value;
+
+            if (type === 'sale' && !window.currentEditSaleId && paymentNow === 0 && !dueDateRaw) {
+                paymentNow = total_amount;
+            }
+
+            const totalPaidToDate = (window.currentEditSaleId ? window.alreadyPaidAmount : 0) + paymentNow;
+
+            if (totalPaidToDate < (total_amount - 0.01) && !dueDateRaw) {
+                showMessage("Informe a DATA PREVISTA para o restante!", "error");
+                document.getElementById('due-date-pos').classList.add('required-pulse');
+                document.getElementById('due-date-pos').focus();
+                return;
+            }
+            document.getElementById('due-date-pos').classList.remove('required-pulse');
+
+            const btn = document.getElementById('btn-finish');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> A PROCESSAR...`;
+            btn.disabled = true;
+
+            const clientObj = db.clients.find(c => c.id == clientIdRaw);
+
+            const data = { 
+                id: window.currentEditSaleId || (type === 'quote' && window.currentEditQuoteId ? window.currentEditQuoteId : (type==='sale'?'KF-':'ORC-') + Date.now().toString().slice(-5)), 
+                client_id: clientIdRaw ? Number(clientIdRaw) : null, 
+                client_name: clientObj ? clientObj.name : 'Particular',
+                payment_method: document.getElementById('payment-method-pos').value, 
+                subtotal: parseFloat(subtotal) || 0, 
+                discount: parseFloat(discount) || 0, 
+                down_payment: parseFloat(totalPaidToDate) || 0, 
+                due_date: dueDateRaw || null,
+                total_amount: parseFloat(total_amount) || 0, 
+                is_update: window.currentEditSaleId ? true : false,
+                items: cart.map(i => ({ id: i.id, name: i.name, qty: i.qty, price: i.price }))
+            };
+
+            const res = await api(type === 'sale' ? '/sales' : '/quotes', 'POST', data); 
+            
+            btn.innerHTML = originalHTML;
+            btn.disabled = false;
+
+            if (res && !res.error) { 
+                if (type === 'sale' && !window.currentEditSaleId) window.printThermalReceipt(data); 
+                showMessage(window.currentEditSaleId ? "Baixa efetuada com sucesso!" : (type === 'sale' ? "Venda efetuada!" : "Orçamento guardado!"));
+                window.clearCart();
+                await loadAllData(); 
+            } else {
+                const errMsg = res.error || "Verifique o ID ou ligação";
+                showMessage("Falha ao salvar: " + errMsg, "error");
+            }
+        }
+
+        window.clearCart = () => { 
+            cart = []; 
+            window.currentEditQuoteId = null; 
+            window.currentEditSaleId = null;
+            window.alreadyPaidAmount = 0;
+            document.getElementById('edit-mode-badge').classList.add('d-none');
+            document.getElementById('edit-sale-badge').classList.add('d-none');
+            document.getElementById('due-date-pos').value = '';
+            document.getElementById('discount-pos').value = '';
+            document.getElementById('sinal-pos').value = '';
+            document.getElementById('label-payment-input').innerText = "Sinal (R$)";
+            window.updateCartUI(); 
+        };
+
+        window.editProd = (id) => { const p = db.products.find(x => Number(x.id) === Number(id)); document.getElementById('p-id').value = p.id; document.getElementById('p-name').value = p.name; document.getElementById('p-size').value = p.size; document.getElementById('p-price').value = p.price; document.getElementById('p-stock').value = p.stock; document.getElementById('form-product').scrollIntoView(); };
+        window.editCli = (id) => { const c = db.clients.find(x => Number(x.id) === Number(id)); document.getElementById('c-id').value = c.id; document.getElementById('c-name').value = c.name; document.getElementById('c-phone').value = c.phone; document.getElementById('c-cpf').value = c.cpf; document.getElementById('m-bust').value = c.m_bust; document.getElementById('m-waist').value = c.m_waist; document.getElementById('m-hips').value = c.m_hips; document.getElementById('m-shoulder').value = c.m_shoulder; document.getElementById('m-sleeve').value = c.m_sleeve; document.getElementById('form-client').scrollIntoView(); };
+        window.deleteDoc = async (col, id) => { if (confirm("Eliminar registo?")) { await api(`/${col}/${id}`, 'DELETE'); loadAllData(); } };
+        window.loadQuoteForEdit = (id) => { const q = db.quotes.find(x => String(x.id) === String(id)); if (!q) return; window.clearCart(); window.currentEditQuoteId = q.id; document.getElementById('edit-mode-badge').classList.remove('d-none'); cart = q.items.map(i => ({ id: i.product_id, name: i.product_name, qty: i.quantity, price: Number(i.price_unit) })); document.getElementById('client-select-pos').value = q.client_id || ""; window.updateCartUI(); bootstrap.Tab.getOrCreateInstance(document.getElementById('nav-vendas-link')).show(); };
+
+        document.getElementById('form-product').onsubmit = async (e) => { e.preventDefault(); const pId = document.getElementById('p-id').value; const body = { id: pId, name: document.getElementById('p-name').value, size: document.getElementById('p-size').value, price: Number(document.getElementById('p-price').value), stock: Number(document.getElementById('p-stock').value) }; const res = await api('/products', 'POST', body); if (res && !res.error) { e.target.reset(); document.getElementById('p-id').value = ''; await loadAllData(); if (!pId) window.generateLabel(res.id); showMessage("Artigo guardado!"); } };
+        document.getElementById('form-client').onsubmit = async (e) => { e.preventDefault(); const body = { id: document.getElementById('c-id').value, name: document.getElementById('c-name').value, phone: document.getElementById('c-phone').value, cpf: document.getElementById('c-cpf').value, m_bust: document.getElementById('m-bust').value, m_waist: document.getElementById('m-waist').value, m_hips: document.getElementById('m-hips').value, m_shoulder: document.getElementById('m-shoulder').value, m_sleeve: document.getElementById('m-sleeve').value }; const res = await api('/clients', 'POST', body); if (res && !res.error) { e.target.reset(); document.getElementById('c-id').value=''; loadAllData(); showMessage("Ficha técnica guardada!"); } };
+
+        window.onload = loadAllData;
+    </script>
+</body>
+</html>

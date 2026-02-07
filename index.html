@@ -1,131 +1,297 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-PT">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Karmem Fardamentos | Gestão de Excelência</title>
-    
+
     <!-- Bibliotecas de Estilo e Ícones -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    
+
     <!-- Bibliotecas de PDF, Gráficos e QR Code -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&display=swap');
 
-        :root { 
-            --primary: #6a0dad; 
-            --secondary: #4f46e5; 
-            --danger: #dc3545; 
-            --success: #198754; 
+        :root {
+            --primary: #6a0dad;
+            --secondary: #4f46e5;
+            --danger: #dc3545;
+            --success: #198754;
+            --warning: #f59e0b;
             --text-dark: #1e293b;
             --bg-light: #f8fafc;
         }
 
-        body { background-color: var(--bg-light); font-family: 'Inter', sans-serif; color: var(--text-dark); }
-        
-        .karmem-header { 
-            background: linear-gradient(135deg, var(--primary), var(--secondary)); 
-            color: white; padding: 1.5rem; margin-bottom: 25px; 
-            border-bottom-left-radius: 2rem; border-bottom-right-radius: 2rem;
-            box-shadow: 0 10px 25px -5px rgba(106, 13, 173, 0.2);
+        body {
+            background-color: var(--bg-light);
+            font-family: 'Inter', sans-serif;
+            color: var(--text-dark);
+            font-size: 0.92rem;
         }
-        
-        .nav-pills .nav-link { color: #64748b; font-weight: 600; border-radius: 12px; margin: 0 5px; padding: 0.5rem 1rem; transition: all 0.2s; font-size: 0.9rem; }
-        .nav-pills .nav-link.active { background-color: var(--primary) !important; color: white !important; box-shadow: 0 4px 12px rgba(106, 13, 173, 0.15); }
 
-        .glass-card { background: white; border-radius: 24px; border: 1px solid #e2e8f0; padding: 1.25rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04); }
-        
-        .card-product { 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-            cursor: pointer; border-radius: 20px; border: 1px solid #f1f5f9; 
-            background: #ffffff; overflow: hidden; position: relative;
+        .karmem-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1.2rem;
+            border-bottom-left-radius: 2.2rem;
+            border-bottom-right-radius: 2.2rem;
+            box-shadow: 0 10px 25px -5px rgba(106, 13, 173, 0.12);
+            margin-bottom: 25px;
         }
-        .card-product:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 20px 25px -5px rgba(106, 13, 173, 0.1); }
-        
-        .btn-brand { background: var(--primary); color: white; border-radius: 12px; font-weight: 700; transition: all 0.3s; border: none; }
-        .btn-brand:hover { background: #5a0b94; transform: translateY(-2px); color: white; box-shadow: 0 8px 20px rgba(106, 13, 173, 0.25); }
 
-        .stat-card { border-radius: 18px; background: #fff; padding: 1.25rem; border: 1px solid #e2e8f0; transition: all 0.2s; position: relative; overflow: hidden; }
-        .stat-card::after { content: ""; position: absolute; left: 0; top: 0; width: 4px; height: 100%; background: var(--primary); }
-        .stat-label { font-size: 0.7rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; display: block; }
-        .stat-value { font-size: 1.4rem; font-weight: 800; color: var(--text-dark); margin: 0; }
+        .nav-pills .nav-link {
+            color: #64748b;
+            font-weight: 600;
+            border-radius: 10px;
+            margin: 0 4px;
+            padding: 0.5rem 1rem;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+        }
 
-        .cart-item { background: #fdfcff; border: 1px solid #f1f0f7; border-radius: 12px; padding: 10px; margin-bottom: 8px; }
+        .nav-pills .nav-link.active {
+            background-color: var(--primary) !important;
+            color: white !important;
+            box-shadow: 0 4px 10px rgba(106, 13, 173, 0.12);
+        }
 
-        .measurement-label { font-size: 0.65rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
-        .section-title { font-size: 0.85rem; font-weight: 800; color: var(--primary); border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 15px; }
+        .glass-card {
+            background: white;
+            border-radius: 20px;
+            border: 1px solid #f1f5f9;
+            padding: 1.2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+        }
 
-        /* Estilos de Impressão Ultra-Económicos */
+        .card-product {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            border-radius: 15px;
+            border: 1px solid #f1f5f9;
+            background: #ffffff;
+            padding: 8px;
+        }
+
+        .card-product:hover {
+            transform: translateY(-3px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 18px -8px rgba(106, 13, 173, 0.15);
+        }
+
+        .btn-brand {
+            background: var(--primary);
+            color: white;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            font-size: 0.9rem;
+        }
+
+        .btn-brand:hover:not(:disabled) {
+            background: #5a0b94;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 12px rgba(106, 13, 173, 0.2);
+        }
+
+        .btn-brand:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .cart-item {
+            background: #fdfcff;
+            border: 1px solid #f1f0f7;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+        }
+
+        .measurement-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+        }
+
+        .section-title {
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: var(--primary);
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 4px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
         @media print {
-            .no-print, .modal, .modal-backdrop { display: none !important; }
-            body { margin: 0 !important; padding: 0 !important; background: white; }
-            
-            #label-print-area { display: block !important; width: 40mm; height: 60mm; margin: 0; padding: 1mm; }
-            
-            #thermal-receipt { 
-                display: block !important; 
-                width: 48mm; 
-                margin: 0 !important; 
+
+            .no-print,
+            .modal,
+            .modal-backdrop {
+                display: none !important;
+            }
+
+            body {
+                background: white;
+                margin: 0 !important;
                 padding: 0 !important;
-                position: absolute; 
+            }
+
+            /* ETIQUETA - mostrar apenas se tiver conteúdo E estiver em modo label */
+            #label-print-area:not(:empty) {
+                display: block !important;
+                width: 40mm;
+                height: 60mm;
+                margin: 0;
+                padding: 1mm;
+            }
+
+            /* CUPOM - mostrar apenas se tiver conteúdo E etiqueta não estiver ativa */
+            #thermal-receipt:not(:empty) {
+                display: block !important;
+                width: 48mm;
+                margin: 0;
+                padding: 0mm;
+                font-family: 'Courier New', Courier, monospace;
+                font-size: 11px;
+                font-weight: 700;
+                line-height: 1.1;
+                color: #000 !important;
+                position: absolute;
                 top: 0;
                 left: 0;
-                font-family: 'Courier New', Courier, monospace; 
-                font-size: 11px; /* Letra ligeiramente maior no cupão */
-                font-weight: 800; 
-                line-height: 1.1; 
-                color: #000 !important;
-                text-rendering: optimizeLegibility;
             }
-            @page { margin: 0; size: auto; }
+
+            /* Se etiqueta está pronta, esconde o cupom */
+            #label-print-area:not(:empty)~#thermal-receipt {
+                display: none !important;
+            }
+
+            @page {
+                margin: 0;
+                size: auto;
+            }
         }
 
-        #thermal-receipt, #label-print-area { display: none; }
-        .receipt-sep { border-bottom: 1px dashed #000; margin: 3px 0; }
-        .receipt-row { display: flex; justify-content: space-between; font-weight: 800; }
-        
-        #label-preview {
-            width: 40mm; height: 60mm; padding: 3mm; background: white; border: 1px solid #eee; margin: 0 auto; text-align: center;
-            font-family: 'Inter', sans-serif; display: flex; flex-direction: column; justify-content: space-between; align-items: center;
+        #thermal-receipt,
+        #label-print-area {
+            display: none;
         }
 
-        .scanner-active { border: 2px solid var(--primary) !important; background-color: #f5f0ff !important; animation: pulse-border 2s infinite; }
-        @keyframes pulse-border { 0% { box-shadow: 0 0 0 0 rgba(106, 13, 173, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(106, 13, 173, 0); } 100% { box-shadow: 0 0 0 0 rgba(106, 13, 173, 0); } }
+        .receipt-sep {
+            border-bottom: 1px dashed #000;
+            margin: 3px 0;
+        }
+
+        .receipt-row {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .qty-btn {
+            width: 26px;
+            height: 26px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            color: var(--primary);
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+
+        .qty-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        #feedback-msg {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            padding: 0.8rem 2rem;
+            border-radius: 12px;
+            font-weight: 700;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            display: none;
+            transition: all 0.3s;
+            font-size: 1rem;
+            text-align: center;
+            min-width: 320px;
+        }
+
+        .required-pulse {
+            border: 2px solid var(--danger) !important;
+            animation: border-glow 1.5s infinite;
+        }
+
+        @keyframes border-glow {
+            0% {
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+            }
+        }
+
+        .updating-badge {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
     </style>
 </head>
+
 <body>
+
+    <div id="feedback-msg"></div>
 
     <header class="karmem-header text-center no-print">
         <div class="container d-flex justify-content-between align-items-center">
-            <div style="width: 120px;" class="d-none d-md-block text-start">
-                <div class="bg-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                    <i class="bi bi-intersect text-primary fs-5"></i>
-                </div>
+            <div style="width: 35px; height: 35px;"
+                class="bg-white rounded-circle d-flex align-items-center justify-content-center shadow-md">
+                <i class="bi bi-intersect text-primary fs-5"></i>
             </div>
             <div>
-                <h1 class="h3 fw-bold m-0" style="font-family: 'Playfair Display', serif;">Karmem Fardamentos</h1>
-                <p class="small opacity-80 m-0 text-uppercase tracking-widest text-white font-semibold" style="font-size: 0.6rem;">Gestão de Atelier de Alta Costura</p>
+                <h1 class="h5 fw-bold m-0" style="font-family: 'Playfair Display', serif; letter-spacing: -0.3px;">
+                    Karmem Fardamentos</h1>
+                <p class="small opacity-90 m-0 font-bold tracking-widest uppercase" style="font-size: 0.6rem;">Alta
+                    Costura & Atelier de Luxo</p>
             </div>
-            <div class="text-end" style="width: 120px;">
-                <div id="connection-status" class="status-badge bg-danger text-white shadow-sm p-1 rounded-pill px-3" style="font-size: 0.6rem;">OFFLINE</div>
-            </div>
+            <div id="connection-status" class="bg-danger text-white p-1 rounded-pill px-4 shadow-sm fw-bold"
+                style="font-size: 0.7rem;">OFFLINE</div>
         </div>
     </header>
 
     <div class="container pb-5 no-print">
         <ul class="nav nav-pills mb-4 justify-content-center bg-white p-2 rounded-4 shadow-sm border border-light">
-            <li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#tab-vendas"><i class="bi bi-shop me-1"></i>Vendas</a></li>
-            <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tab-orcamentos"><i class="bi bi-file-earmark-pdf me-1"></i>Orçamentos</a></li>
-            <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tab-estoque"><i class="bi bi-box-seam me-1"></i>Estoque</a></li>
-            <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tab-clientes"><i class="bi bi-people me-1"></i>Clientes</a></li>
-            <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tab-relatorios" onclick="window.initDashboard()"><i class="bi bi-graph-up me-1"></i>Relatórios</a></li>
+            <li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#tab-vendas"
+                    id="nav-vendas-link">Vendas</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tab-orcamentos">Orçamentos</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tab-estoque">Estoque</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tab-clientes">Clientes</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#tab-relatorios"
+                    onclick="window.initDashboard()">Relatórios</a></li>
         </ul>
 
         <div class="tab-content">
@@ -135,146 +301,317 @@
                     <div class="col-lg-8">
                         <div class="glass-card h-100">
                             <div class="d-flex justify-content-between align-items-center mb-4">
-                                <h6 class="fw-bold text-slate-800 m-0"><i class="bi bi-qr-code-scan me-2"></i>Leitura de Artigos</h6>
-                                <div class="input-group shadow-sm rounded-pill overflow-hidden border-0 bg-slate-50 w-50">
-                                    <span class="input-group-text bg-transparent border-0 ps-3 text-muted"><i class="bi bi-upc-scan"></i></span>
-                                    <input type="text" id="search-pos" class="form-control border-0 bg-transparent py-2 shadow-none small scanner-active" placeholder="Aponte o scanner ou digite..." oninput="window.handleSearchInput(event)" autofocus>
-                                </div>
+                                <h6 class="fw-bold m-0 text-slate-700" style="font-size: 0.95rem;"><i
+                                        class="bi bi-qr-code-scan me-2"></i>Leitura de Código</h6>
+                                <input type="text" id="search-pos"
+                                    class="form-control w-50 rounded-pill shadow-none border-light bg-slate-50 py-2"
+                                    style="font-size: 0.9rem;" placeholder="Aponte o scanner..."
+                                    oninput="window.handleSearchInput(event)" autofocus>
                             </div>
                             <div id="pos-grid" class="row g-3"></div>
                         </div>
                     </div>
-
                     <div class="col-lg-4">
                         <div class="glass-card sticky-top border-2 border-primary border-opacity-10" style="top: 20px;">
-                            <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
-                                <h5 class="fw-bold text-primary m-0">Checkout</h5>
-                                <button onclick="window.clearCart()" class="btn btn-sm btn-outline-danger border-0 rounded-pill"><i class="bi bi-trash"></i></button>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="fw-bold text-primary m-0"
+                                    style="font-family: 'Playfair Display', serif; font-size: 1.2rem;">Checkout</h5>
+                                <button onclick="window.clearCart()"
+                                    class="btn btn-sm btn-outline-danger border-0 rounded-pill" title="Limpar tudo"><i
+                                        class="bi bi-trash"></i></button>
                             </div>
-                            <div class="mb-3"><label class="stat-label">Cliente Responsável</label><select id="client-select-pos" class="form-select border-light shadow-none bg-slate-50 rounded-3"></select></div>
-                            <div class="mb-4"><label class="stat-label">Pagamento</label><select id="payment-method-pos" class="form-select border-light shadow-none bg-slate-50 rounded-3"><option value="Dinheiro">💵 Dinheiro</option><option value="PIX">📱 PIX</option><option value="Cartão">💳 Cartão</option><option value="Transferência">🏦 Transferência</option></select></div>
-                            <label class="stat-label">Carrinho</label>
-                            <div id="cart-items" class="mb-4 small border-bottom pb-3 overflow-auto" style="max-height: 280px; min-height: 100px;"></div>
-                            <div class="pt-2">
-                                <div class="d-flex justify-content-between h3 fw-bold text-primary mt-2"><span>Total</span><span id="cart-total">R$ 0,00</span></div>
-                                <div id="edit-mode-badge" class="alert alert-warning py-1 px-2 small mb-3 d-none rounded-3 mt-3"><i class="bi bi-pencil-square me-1"></i> Editando Orçamento</div>
-                                <div class="d-grid gap-2 mt-4">
-                                    <button class="btn btn-brand py-3 shadow" id="btn-finish" disabled onclick="window.handleTransaction('sale')">FINALIZAR VENDA</button>
-                                    <button class="btn btn-outline-secondary py-2 border-2 rounded-3 fw-bold small" id="btn-quote" disabled onclick="window.handleTransaction('quote')">CRIAR ORÇAMENTO</button>
+
+                            <div id="edit-sale-badge" class="alert updating-badge py-1 px-2 small mb-2 d-none rounded-3"
+                                style="font-size: 0.75rem;">
+                                <i class="bi bi-pencil-fill me-1"></i> Atualizando Venda <span
+                                    id="edit-sale-id-text"></span>
+                            </div>
+
+                            <div class="mb-2">
+                                <label class="stat-label">Cliente Responsável</label>
+                                <select id="client-select-pos"
+                                    class="form-select form-select-sm border-light shadow-none bg-slate-50"></select>
+                            </div>
+
+                            <div class="row g-2 mb-2">
+                                <div class="col-6">
+                                    <label class="stat-label">Pagamento</label>
+                                    <select id="payment-method-pos"
+                                        class="form-select form-select-sm border-light shadow-none bg-slate-50">
+                                        <option value="Dinheiro">💵 Dinheiro</option>
+                                        <option value="PIX">📱 PIX</option>
+                                        <option value="Cartão">💳 Cartão</option>
+                                    </select>
                                 </div>
+                                <div class="col-6">
+                                    <label class="stat-label text-danger" id="label-due-date">Previsão Restante</label>
+                                    <input type="date" id="due-date-pos"
+                                        class="form-control form-select-sm border-light shadow-none bg-slate-50"
+                                        style="font-size: 0.75rem;">
+                                </div>
+                            </div>
+
+                            <div class="row g-2 mb-3">
+                                <div class="col-7">
+                                    <label class="stat-label">Desconto</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" id="discount-pos"
+                                            class="form-control border-light shadow-none bg-slate-50" placeholder="0"
+                                            oninput="window.updateCartUI()">
+                                        <select id="discount-type-pos"
+                                            class="form-select border-light shadow-none bg-slate-100"
+                                            style="max-width: 65px;" onchange="window.updateCartUI()">
+                                            <option value="cash">R$</option>
+                                            <option value="percent">%</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-5">
+                                    <label class="stat-label text-success" id="label-payment-input">Sinal (R$)</label>
+                                    <input type="number" id="sinal-pos"
+                                        class="form-control form-control-sm border-light shadow-none bg-slate-50"
+                                        placeholder="0.00" oninput="window.updateCartUI()">
+                                </div>
+                            </div>
+
+                            <label class="stat-label">Carrinho</label>
+                            <div id="cart-items" class="mb-3 border-bottom pb-2 overflow-auto"
+                                style="max-height: 180px; min-height: 60px;"></div>
+
+                            <div class="pt-1 bg-slate-50 p-2 rounded-3 border border-light shadow-sm">
+                                <div class="d-flex justify-content-between small text-muted"><span>Subtotal:</span><span
+                                        id="cart-subtotal">R$ 0,00</span></div>
+                                <div class="d-flex justify-content-between small text-danger">
+                                    <span>Desconto:</span><span id="cart-discount-val">- R$ 0,00</span>
+                                </div>
+                                <div class="d-flex justify-content-between fw-bold text-slate-700 mt-1 border-top pt-1">
+                                    <span>Total da Venda:</span>
+                                    <span id="cart-total-final">R$ 0,00</span>
+                                </div>
+                                <div id="summary-already-paid-row"
+                                    class="d-flex justify-content-between small text-success mt-1 d-none">
+                                    <span>Já Pago Anteriormente:</span>
+                                    <span id="cart-already-paid">R$ 0,00</span>
+                                </div>
+                                <div class="d-flex justify-content-between small text-primary mt-1">
+                                    <span id="summary-payment-label">Receber Agora:</span>
+                                    <span id="cart-sinal-val">R$ 0,00</span>
+                                </div>
+                                <div
+                                    class="d-flex justify-content-between h6 fw-bold text-primary mt-2 mb-0 border-top border-dashed pt-1">
+                                    <span id="total-label-ui">Restante a Pagar:</span>
+                                    <span id="cart-balance">R$ 0,00</span>
+                                </div>
+                            </div>
+
+                            <div id="edit-mode-badge"
+                                class="alert alert-warning py-1 px-3 small mb-2 d-none rounded-3 mt-2"
+                                style="font-size: 0.75rem;"><i class="bi bi-pencil-square me-1"></i> Editando Orçamento
+                            </div>
+
+                            <div class="d-grid gap-2 mt-3">
+                                <button
+                                    class="btn btn-brand py-2 shadow-sm d-flex align-items-center justify-content-center"
+                                    id="btn-finish" disabled onclick="window.handleTransaction('sale')">
+                                    <span id="btn-finish-text">FINALIZAR VENDA</span>
+                                </button>
+                                <button class="btn btn-outline-secondary py-2 rounded-3 fw-bold"
+                                    style="font-size: 0.8rem;" id="btn-quote" disabled
+                                    onclick="window.handleTransaction('quote')">SALVAR ORÇAMENTO</button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- ABA ORÇAMENTOS -->
+            <!-- TABELAS MANTIDAS -->
             <div class="tab-pane fade" id="tab-orcamentos">
                 <div class="glass-card">
-                    <h5 class="fw-bold mb-4 text-primary">Gestão de Orçamentos</h5>
+                    <h5 class="fw-bold mb-4 text-primary"
+                        style="font-family: 'Playfair Display', serif; font-size: 1.3rem;">Orçamentos Registados</h5>
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle">
-                            <thead><tr><th>Ref</th><th>Data</th><th>Cliente</th><th>Valor</th><th class="text-center">Status</th><th class="text-center">Exportar</th><th class="text-end">Ações</th></tr></thead>
+                        <table class="table table-hover align-middle" style="font-size: 0.85rem;">
+                            <thead class="text-muted small uppercase">
+                                <tr>
+                                    <th>Ref</th>
+                                    <th>Data</th>
+                                    <th>Cliente</th>
+                                    <th>Valor</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-center">Exportar</th>
+                                    <th class="text-end">Ações</th>
+                                </tr>
+                            </thead>
                             <tbody id="all-quotes-table"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- ABA RELATÓRIOS -->
             <div class="tab-pane fade" id="tab-relatorios">
                 <div class="row g-3 mb-4">
-                    <div class="col-6 col-md-3"><div class="stat-card shadow-sm"><span class="stat-label">Hoje</span><p class="stat-value text-primary" id="stat-today">R$ 0,00</p></div></div>
-                    <div class="col-6 col-md-3"><div class="stat-card shadow-sm" style="border-left-color: #198754;"><span class="stat-label">Mês</span><p class="stat-value text-success" id="stat-month">R$ 0,00</p></div></div>
-                    <div class="col-6 col-md-3"><div class="stat-card shadow-sm" style="border-left-color: #ffc107;"><span class="stat-label">Ticket Médio</span><p class="stat-value text-warning" id="stat-ticket">R$ 0,00</p></div></div>
-                    <div class="col-6 col-md-3"><div class="stat-card shadow-sm" style="border-left-color: #4f46e5;"><span class="stat-label">Pedidos</span><p class="stat-value text-indigo-600" id="stat-count">0</p></div></div>
+                    <div class="col-6 col-md-3">
+                        <div class="stat-card shadow-sm"><span class="stat-label">Hoje</span>
+                            <p class="stat-value text-primary" id="stat-today">R$ 0,00</p>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="stat-card shadow-sm" style="border-left-color: var(--success);"><span
+                                class="stat-label">Este Mês</span>
+                            <p class="stat-value text-success" id="stat-month">R$ 0,00</p>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="stat-card shadow-sm" style="border-left-color: var(--warning);"><span
+                                class="stat-label">Vencendo Hoje</span>
+                            <p class="stat-value text-warning" id="stat-due-today">0</p>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="stat-card shadow-sm" style="border-left-color: var(--danger);"><span
+                                class="stat-label">Total Pendente</span>
+                            <p class="stat-value text-danger" id="stat-pending">R$ 0,00</p>
+                        </div>
+                    </div>
                 </div>
+                <div id="payment-alerts-container" class="mb-4"></div>
                 <div class="row g-4">
-                    <div class="col-lg-8">
+                    <div class="col-lg-12">
                         <div class="glass-card mb-4">
-                            <input type="month" id="report-month-filter" class="form-control form-control-sm w-auto mb-3" onchange="window.initDashboard()">
-                            <canvas id="chart-daily" height="180"></canvas>
-                        </div>
-                        <div id="daily-details-accordion" class="accordion shadow-sm"></div>
-                    </div>
-                    <div class="col-lg-4">
-                        <div class="glass-card h-100">
-                            <select id="report-select-client" class="form-select mb-3" onchange="window.renderClientHistory(this.value)"></select>
-                            <div id="report-content" class="p-2 border rounded-4 bg-slate-50 overflow-auto" style="max-height: 600px;"></div>
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h6 class="fw-bold m-0 fs-6"><i
+                                        class="bi bi-file-earmark-bar-graph me-2 text-primary"></i>Análise de Transações
+                                </h6>
+                                <div class="d-flex gap-2">
+                                    <select id="report-filter-type"
+                                        class="form-select form-select-sm shadow-none border-light bg-slate-50"
+                                        onchange="window.initDashboard()">
+                                        <option value="all">Todas as Vendas</option>
+                                        <option value="debt">Apenas Pendentes</option>
+                                    </select>
+                                    <input type="month" id="report-month-filter"
+                                        class="form-control form-control-sm shadow-none border-light bg-slate-50 w-auto"
+                                        onchange="window.initDashboard()">
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table report-table align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>Data</th>
+                                            <th>Ref</th>
+                                            <th>Cliente</th>
+                                            <th class="text-end">V. Total</th>
+                                            <th class="text-end text-success">Sinal / Pago</th>
+                                            <th class="text-end text-danger">A Pagar</th>
+                                            <th class="text-center">Vencimento</th>
+                                            <th class="text-center">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="detailed-sales-list"></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- ESTOQUE -->
             <div class="tab-pane fade" id="tab-estoque">
-                <div class="row g-3 mb-4">
-                    <div class="col-6 col-md-3"><div class="stat-card shadow-sm"><span class="stat-label">Artigos</span><p class="stat-value text-primary" id="stock-stat-count">0</p></div></div>
-                    <div class="col-6 col-md-3"><div class="stat-card shadow-sm" style="border-left-color: #198754;"><span class="stat-label">Stock Total</span><p class="stat-value text-success" id="stock-stat-items">0</p></div></div>
-                    <div class="col-6 col-md-3"><div class="stat-card shadow-sm" style="border-left-color: #ffc107;"><span class="stat-label">Valor Total</span><p class="stat-value text-warning" id="stock-stat-value">R$ 0,00</p></div></div>
-                    <div class="col-6 col-md-3"><div class="stat-card shadow-sm" style="border-left-color: #dc3545;"><span class="stat-label">Reposição</span><p class="stat-value text-danger" id="stock-stat-low">0</p></div></div>
-                </div>
                 <div class="glass-card">
-                    <form id="form-product" class="row g-3 mb-4 bg-slate-50 p-4 rounded-4 border">
-                        <input type="hidden" id="p-id"><div class="col-md-5"><input type="text" id="p-name" class="form-control shadow-sm" placeholder="Nome do Artigo" required></div>
-                        <div class="col-md-2"><select id="p-size" class="form-select shadow-sm"><option>P</option><option>M</option><option>G</option><option>GG</option><option>EG</option></select></div>
-                        <div class="col-md-2"><input type="number" id="p-price" class="form-control shadow-sm" step="0.01" placeholder="Preço" required></div>
-                        <div class="col-md-2"><input type="number" id="p-stock" class="form-control shadow-sm" placeholder="Quantidade" required></div>
-                        <div class="col-md-1"><button type="submit" class="btn btn-brand w-100 py-2 shadow"><i class="bi bi-save"></i></button></div>
+                    <h5 class="fw-bold mb-4 text-primary" style="font-family: 'Playfair Display', serif;">Gestão de
+                        Stock</h5>
+                    <form id="form-product" class="row g-2 mb-4 bg-slate-50 p-3 rounded-4 border shadow-sm">
+                        <input type="hidden" id="p-id">
+                        <div class="col-md-5"><input type="text" id="p-name" class="form-control py-2 fs-6"
+                                placeholder="Artigo" required></div>
+                        <div class="col-md-2"><select id="p-size" class="form-select py-2 fs-6">
+                                <option>P</option>
+                                <option>M</option>
+                                <option>G</option>
+                                <option>GG</option>
+                                <option>EG</option>
+                            </select></div>
+                        <div class="col-md-2"><input type="number" id="p-price" class="form-control py-2 fs-6"
+                                step="0.01" placeholder="Preço" required></div>
+                        <div class="col-md-2"><input type="number" id="p-stock" class="form-control py-2 fs-6"
+                                placeholder="Qtd" required></div>
+                        <div class="col-md-1"><button type="submit" class="btn btn-brand w-100 py-2 shadow-sm"><i
+                                    class="bi bi-save"></i></button></div>
                     </form>
-                    <table class="table table-hover align-middle"><tbody id="inventory-table"></tbody></table>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle" style="font-size: 0.9rem;">
+                            <tbody id="inventory-table"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
-            <!-- CLIENTES (FICHA COMPLETA) -->
             <div class="tab-pane fade" id="tab-clientes">
                 <div class="glass-card">
-                    <h5 class="fw-bold mb-4 text-primary">Ficha de Cliente & Medidas de Atelier</h5>
-                    <form id="form-client" class="bg-slate-50 p-4 rounded-4 border shadow-sm mb-5">
+                    <h5 class="fw-bold mb-4 text-primary" style="font-family: 'Playfair Display', serif;">Ficha Técnica
+                        de Clientes</h5>
+                    <form id="form-client" class="bg-slate-50 p-3 rounded-4 border mb-5 shadow-sm">
                         <input type="hidden" id="c-id">
-                        <div class="section-title"><i class="bi bi-person-vcard me-2"></i>Informações Pessoais</div>
                         <div class="row g-3 mb-4">
-                            <div class="col-md-4"><label class="measurement-label">Nome Completo</label><input type="text" id="c-name" class="form-control form-control-sm" required></div>
-                            <div class="col-md-3"><label class="measurement-label">WhatsApp</label><input type="text" id="c-phone" class="form-control form-control-sm"></div>
-                            <div class="col-md-3"><label class="measurement-label">E-mail</label><input type="email" id="c-email" class="form-control form-control-sm"></div>
-                            <div class="col-md-2"><label class="measurement-label">CPF/CNPJ</label><input type="text" id="c-cpf" class="form-control form-control-sm"></div>
-                            <div class="col-md-12"><label class="measurement-label">Endereço Completo</label><input type="text" id="c-address" class="form-control form-control-sm"></div>
+                            <div class="col-md-6"><label class="measurement-label">Nome Completo</label><input
+                                    type="text" id="c-name" class="form-control py-2 fs-6 rounded-3" required></div>
+                            <div class="col-md-3"><label class="measurement-label">WhatsApp</label><input type="text"
+                                    id="c-phone" class="form-control py-2 fs-6 rounded-3"></div>
+                            <div class="col-md-3"><label class="measurement-label">CPF/CNPJ</label><input type="text"
+                                    id="c-cpf" class="form-control py-2 fs-6 rounded-3"></div>
                         </div>
-                        <div class="section-title"><i class="bi bi-rulers me-2"></i>Medidas Corporais (cm)</div>
-                        <div class="row g-3 mb-4">
-                            <div class="col-6 col-md-2"><label class="measurement-label">Busto</label><input type="number" id="m-bust" class="form-control form-control-sm"></div>
-                            <div class="col-6 col-md-2"><label class="measurement-label">Cintura</label><input type="number" id="m-waist" class="form-control form-control-sm"></div>
-                            <div class="col-6 col-md-2"><label class="measurement-label">Quadril</label><input type="number" id="m-hips" class="form-control form-control-sm"></div>
-                            <div class="col-6 col-md-2"><label class="measurement-label">Ombro</label><input type="number" id="m-shoulder" class="form-control form-control-sm"></div>
-                            <div class="col-6 col-md-2"><label class="measurement-label">Manga</label><input type="number" id="m-sleeve" class="form-control form-control-sm"></div>
-                            <div class="col-6 col-md-2"><label class="measurement-label">C. Superior</label><input type="number" id="m-length-up" class="form-control form-control-sm"></div>
-                            <div class="col-6 col-md-2"><label class="measurement-label">C. Inferior</label><input type="number" id="m-length-down" class="form-control form-control-sm"></div>
+                        <div class="section-title">Medidas (cm)</div>
+                        <div class="row g-3">
+                            <div class="col-4 col-md-2"><label class="measurement-label">Busto</label><input
+                                    type="number" id="m-bust" class="form-control py-1"></div>
+                            <div class="col-4 col-md-2"><label class="measurement-label">Cintura</label><input
+                                    type="number" id="m-waist" class="form-control py-1"></div>
+                            <div class="col-4 col-md-2"><label class="measurement-label">Quadril</label><input
+                                    type="number" id="m-hips" class="form-control py-1"></div>
+                            <div class="col-4 col-md-2"><label class="measurement-label">Ombro</label><input
+                                    type="number" id="m-shoulder" class="form-control py-1"></div>
+                            <div class="col-4 col-md-2"><label class="measurement-label">Manga</label><input
+                                    type="number" id="m-sleeve" class="form-control py-1"></div>
                         </div>
-                        <div class="d-flex justify-content-end mt-3"><button type="submit" class="btn btn-brand px-5 shadow rounded-3">GUARDAR FICHA TÉCNICA</button></div>
+                        <div class="d-flex justify-content-end mt-4"><button type="submit"
+                                class="btn btn-brand px-5 py-2 shadow-sm">GUARDAR FICHA</button></div>
                     </form>
-                    <table class="table table-hover border rounded shadow-sm"><tbody id="clients-table"></tbody></table>
+                    <div class="table-responsive">
+                        <table class="table table-hover border rounded shadow-sm" style="font-size: 0.9rem;">
+                            <tbody id="clients-table"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL QR CODE -->
+    <!-- MODAL ETIQUETA -->
     <div class="modal fade" id="modal-label" tabindex="-1">
         <div class="modal-dialog modal-sm modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 24px;">
                 <div class="modal-body p-4 text-center">
-                    <h6 class="fw-bold mb-3">Gerar Etiqueta QR</h6>
-                    <div id="label-wrapper-modal" class="bg-white p-2 border rounded">
-                        <div id="label-preview">
-                            <div style="font-size: 9px; font-weight: 800; color: #6a0dad; border-bottom: 1.5px solid #6a0dad; width: 100%; padding-bottom: 3px;">KARMEM FARDAMENTOS</div>
-                            <div id="label-name" style="font-size: 10px; font-weight: 700; margin-top: 6px; line-height: 1.1;">PRODUTO</div>
-                            <div style="font-size: 9px; margin: 2px 0;">TAMANHO: <b id="label-size">M</b></div>
+                    <h6 class="fw-bold mb-3" style="font-size: 1rem;">Etiqueta do Artigo</h6>
+                    <div id="label-wrapper-modal" class="bg-white p-3 border rounded-4 shadow-sm">
+                        <div id="label-preview"
+                            style="width: 40mm; height: 60mm; margin: 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: space-between;">
+                            <div
+                                style="font-size: 10px; font-weight: 800; color: #6a0dad; border-bottom: 2px solid #6a0dad; width: 100%; padding-bottom: 4px;">
+                                KARMEM FARDAMENTOS</div>
+                            <div id="label-name"
+                                style="font-size: 12px; font-weight: 700; margin-top: 5px; line-height: 1.1;">PRODUTO
+                            </div>
+                            <div style="font-size: 8px; margin: 4px 0;">TAMANHO: <b id="label-size">M</b></div>
                             <div id="qrcode" style="margin: 6px 0; display: inline-block;"></div>
-                            <div style="font-size: 7px; color: #777;">REF: <span id="label-id">000</span></div>
-                            <div id="label-price" style="font-size: 14px; font-weight: 900; background: #6a0dad; color: white; width: 100%; padding: 4px 0;">R$ 0,00</div>
+                            <div style="font-size: 8px; color: #777;">ID: <span id="label-id">000</span></div>
+                            <div id="label-price"
+                                style="font-size: 14px; font-weight: 900; background: #6a0dad; color: white; width: 100%; padding: 4px 0; border-radius: 4px;">
+                                R$ 0,00</div>
                         </div>
                     </div>
-                    <div class="d-grid gap-2 mt-4"><button onclick="window.printCurrentLabel()" class="btn btn-brand py-2">Imprimir</button><button data-bs-dismiss="modal" class="btn btn-light border py-2">Fechar</button></div>
+                    <div class="d-grid gap-2 mt-4"><button onclick="window.printCurrentLabel()"
+                            class="btn btn-brand py-2 shadow-sm">Imprimir</button><button data-bs-dismiss="modal"
+                            class="btn btn-light border py-2">Fechar</button></div>
                 </div>
             </div>
         </div>
@@ -285,262 +622,623 @@
 
     <script>
         const API_URL = 'http://localhost:3000/api';
+
         let db = { products: [], clients: [], sales: [], quotes: [] };
         let cart = [];
-        let isOnline = false;
-        let chartDaily = null;
         window.currentEditQuoteId = null;
+        window.currentEditSaleId = null;
+        window.alreadyPaidAmount = 0;
+
+        function showMessage(msg, type = 'success') {
+            const el = document.getElementById('feedback-msg');
+            if (!el) return;
+            el.innerText = msg;
+            el.style.backgroundColor = type === 'success' ? 'var(--success)' : 'var(--danger)';
+            el.style.color = 'white';
+            el.style.display = 'block';
+            setTimeout(() => { el.style.display = 'none'; }, 5000);
+        }
 
         async function api(path, method = 'GET', body = null) {
             try {
-                const options = { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : null };
+                const options = {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: body ? JSON.stringify(body) : null
+                };
                 const res = await fetch(`${API_URL}${path}`, options);
-                const data = await res.json();
+
+                // Tenta fazer parse JSON apenas se houver conteúdo
+                let data = {};
+                const contentType = res.headers.get('content-type') || '';
+
+                if (contentType.includes('application/json')) {
+                    data = await res.json();
+                } else if (res.ok) {
+                    data = {};
+                } else {
+                    // Se a resposta não é JSON e houve erro, retorna mensagem de erro
+                    const text = await res.text();
+                    console.error(`Erro ${res.status}:`, text);
+                    throw new Error(`Erro de Servidor (${res.status}): ${text.substring(0, 100)}`);
+                }
+
+                if (!res.ok) {
+                    throw new Error(data.error || `Erro de Servidor (${res.status})`);
+                }
                 updateStatus(true);
                 return data;
-            } catch (e) { updateStatus(false); return null; }
+            } catch (e) {
+                updateStatus(false);
+                console.error("API Error:", e.message);
+                return { error: e.message };
+            }
         }
 
         function updateStatus(online) {
-            isOnline = online;
             const b = document.getElementById('connection-status');
-            b.innerText = online ? 'SISTEMA ONLINE' : 'OFFLINE';
-            b.className = `status-badge ${online ? 'bg-success text-white shadow-sm' : 'bg-danger text-white animate-pulse'}`;
+            if (b) {
+                b.innerText = online ? 'ONLINE' : 'OFFLINE';
+                b.className = `p-1 rounded-pill px-4 shadow-sm ${online ? 'bg-success' : 'bg-danger'} text-white fw-bold`;
+            }
         }
 
         async function loadAllData() {
             const [p, c, q, s] = await Promise.all([api('/products'), api('/clients'), api('/quotes'), api('/sales/client/all')]);
-            db.products = p || []; db.clients = c || []; db.quotes = q || []; db.sales = s || [];
+            db.products = Array.isArray(p) ? p : [];
+            db.clients = Array.isArray(c) ? c : [];
+            db.quotes = Array.isArray(q) ? q : [];
+            db.sales = Array.isArray(s) ? s : [];
             window.render();
         }
 
         window.handleSearchInput = (e) => {
-            const searchInput = e.target;
-            const search = searchInput.value.toLowerCase().trim();
-            if (!search) { window.render(); return; }
-            const exactMatch = db.products.find(p => p.id.toString() === search);
-            if (exactMatch) {
-                if (exactMatch.stock > 0) {
-                    window.addToCart(exactMatch.id);
-                    searchInput.value = "";
-                    searchInput.focus();
-                } else {
-                    searchInput.value = "";
-                }
-            }
+            const search = e.target.value.trim();
+            if (!search) return;
+            const exact = db.products.find(p => String(p.id) === search);
+            if (exact) { window.addToCart(exact.id); e.target.value = ""; e.target.focus(); }
             window.render();
         };
 
         window.render = () => {
-            const search = document.getElementById('search-pos').value.toLowerCase().trim();
+            const searchInput = document.getElementById('search-pos');
+            const search = searchInput ? searchInput.value.toLowerCase().trim() : "";
             const posGrid = document.getElementById('pos-grid');
+
             if (!search) {
-                posGrid.innerHTML = `<div class="col-12 py-5 text-center text-muted opacity-40"><i class="bi bi-qr-code-scan fs-1"></i><h6 class="fw-bold mt-2">Aguardando Leitura</h6></div>`;
+                posGrid.innerHTML = `<div class="col-12 py-5 text-center text-muted opacity-40"><i class="bi bi-qr-code-scan fs-1"></i><h6 class="mt-2 fs-5">Scanner Pronto</h6></div>`;
             } else {
-                const filtered = db.products.filter(p => p.name.toLowerCase().includes(search) || p.id.toString() === search);
-                posGrid.innerHTML = filtered.map(p => `<div class="col-md-4 col-6"><div class="card card-product border-light shadow-sm h-100 ${p.stock <= 0 ? 'opacity-50 grayscale' : ''}" onclick="${p.stock > 0 ? `window.addToCart(${p.id})` : ''}"><div class="card-body p-3 text-center"><span class="badge bg-primary bg-opacity-10 text-primary mb-2">Tam. ${p.size}</span><h6 class="fw-bold text-slate-800 m-0 text-truncate">${p.name}</h6><div class="mt-2 fw-bold text-primary">R$ ${parseFloat(p.price).toFixed(2)}</div><small class="text-muted">ID: ${p.id}</small></div></div></div>`).join('') || '<div class="col-12 text-center text-muted">Não localizado.</div>';
+                const filtered = db.products.filter(p => p.name.toLowerCase().includes(search) || String(p.id) === search);
+                posGrid.innerHTML = filtered.map(p => {
+                    const price = Number(p.price) || 0;
+                    return `<div class="col-md-4 col-6"><div class="card card-product border-light shadow-sm h-100 ${p.stock <= 0 ? 'opacity-50 grayscale' : ''}" onclick="${p.stock > 0 ? `window.addToCart(${p.id})` : ''}"><div class="card-body p-3 text-center"><span class="badge bg-primary bg-opacity-10 text-primary mb-2" style="font-size: 0.7rem;">Tam. ${p.size}</span><h6 class="fw-bold text-truncate mb-2" style="font-size: 0.85rem;">${p.name}</h6><div class="fw-bold text-primary" style="font-size: 0.95rem;">R$ ${price.toFixed(2)}</div></div></div></div>`
+                }).join('') || '<div class="col-12 text-center text-muted py-4 small">Nenhum resultado...</div>';
             }
-            
-            let totalVal = 0, lowStock = 0, totalItems = 0;
-            document.getElementById('inventory-table').innerHTML = db.products.map(p => {
-                const s = parseInt(p.stock); totalItems += s; totalVal += (s * parseFloat(p.price)); if (s <= 5) lowStock++;
-                return `<tr><td><b>${p.name}</b> (${p.size})</td><td>R$ ${parseFloat(p.price).toFixed(2)}</td><td>${s}</td><td class="text-end"><div class="btn-group border rounded shadow-sm"><button onclick="window.generateLabel(${p.id})" class="btn btn-sm btn-light text-primary"><i class="bi bi-qr-code"></i></button><button onclick="window.editProd(${p.id})" class="btn btn-sm btn-light border-start"><i class="bi bi-pencil"></i></button><button onclick="window.deleteDoc('products', ${p.id})" class="btn btn-sm btn-light text-danger border-start"><i class="bi bi-trash"></i></button></div></td></tr>`
-            }).join('');
 
-            document.getElementById('stock-stat-count').innerText = db.products.length;
-            document.getElementById('stock-stat-items').innerText = totalItems;
-            document.getElementById('stock-stat-value').innerText = `R$ ${totalVal.toFixed(2)}`;
-            document.getElementById('stock-stat-low').innerText = lowStock;
-            
-            document.getElementById('clients-table').innerHTML = db.clients.map(c => `<tr><td><b>${c.name}</b><br><small class="text-muted">${c.email || ''}</small></td><td>${c.phone || '-'}<br><small class="text-muted">${c.address || ''}</small></td><td class="text-end"><button onclick="window.editCli(${c.id})" class="btn btn-sm btn-light border shadow-sm px-3"><i class="bi bi-pencil-square"></i> Ficha</button></td></tr>`).join('');
-            
-            document.getElementById('all-quotes-table').innerHTML = db.quotes.map(q => {
-                const s = q.status === 'Aprovado' ? 'bg-success' : (q.status === 'Recusado' ? 'bg-danger' : 'bg-secondary');
-                return `<tr><td><b>ORC-${q.id.split('-').pop()}</b></td><td><small>${q.date}</small></td><td>${q.client_name || 'Particular'}</td><td><b class="text-primary">R$ ${parseFloat(q.total).toFixed(2)}</b></td><td class="text-center"><span class="badge ${s} bg-opacity-10 ${s.replace('bg-','text-')}">${q.status}</span></td><td class="text-center"><div class="btn-group border rounded shadow-sm"><button onclick="window.printFormalPDF('${q.id}')" class="btn btn-sm btn-light text-primary px-3"><i class="bi bi-file-earmark-pdf-fill"></i></button><button onclick="window.shareQuote('${q.id}')" class="btn btn-sm btn-light text-success px-3"><i class="bi bi-whatsapp"></i></button></div></td><td class="text-end"><div class="btn-group border rounded shadow-sm"><button onclick="window.updateQuoteStatus('${q.id}', 'Aprovado')" class="btn btn-sm btn-light text-success px-2"><i class="bi bi-check-circle-fill"></i></button><button onclick="window.updateQuoteStatus('${q.id}', 'Recusado')" class="btn btn-sm btn-light text-warning px-2"><i class="bi bi-x-circle"></i></button><button onclick="window.loadQuoteForEdit('${q.id}')" class="btn btn-sm btn-light text-primary px-2"><i class="bi bi-pencil-square"></i></button><button onclick="window.deleteDoc('quotes', '${q.id}')" class="btn btn-sm btn-light text-danger px-2"><i class="bi bi-trash3"></i></button></div></td></tr>`}).join('');
+            document.getElementById('inventory-table').innerHTML = db.products.map(p => `<tr class="stock-row"><td><b>${p.name}</b> (${p.size})</td><td>R$ ${(Number(p.price) || 0).toFixed(2)}</td><td><b>${p.stock}</b></td><td class="text-end"><div class="btn-group border rounded shadow-sm overflow-hidden"><button onclick="window.generateLabel(${p.id})" class="btn btn-sm btn-light text-primary border-0 px-3"><i class="bi bi-qr-code"></i></button><button onclick="window.editProd(${p.id})" class="btn btn-sm btn-light border-0 border-start px-3"><i class="bi bi-pencil"></i></button><button onclick="window.deleteDoc('products', ${p.id})" class="btn btn-sm btn-light text-danger border-0 border-start px-3"><i class="bi bi-trash"></i></button></div></td></tr>`).join('');
+            document.getElementById('clients-table').innerHTML = db.clients.map(c => `<tr><td class="fw-bold fs-6">${c.name}</td><td>${c.phone || '-'}</td><td>${c.cpf || '-'}</td><td class="text-end"><button onclick="window.editCli(${c.id})" class="btn btn-sm btn-light border shadow-sm px-4 py-1">Ficha</button></td></tr>`).join('');
 
-            const opts = '<option value="">Filtro Cliente...</option>' + db.clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            document.getElementById('all-quotes-table').innerHTML = db.quotes.map(q => `<tr><td class="fw-bold">ORC-${String(q.id).split('-').pop()}</td><td><small>${(q.created_at || '').split('T')[0] || (q.date || '').split(',')[0]}</small></td><td class="fw-medium">${q.client_name || 'Particular'}</td><td><b class="text-primary">R$ ${(Number(q.total_amount || q.total) || 0).toFixed(2)}</b></td><td class="text-center"><span class="badge ${q.status === 'Aprovado' ? 'bg-success' : q.status === 'Recusado' ? 'bg-danger' : 'bg-secondary'} bg-opacity-10 text-${q.status === 'Aprovado' ? 'success' : q.status === 'Recusado' ? 'danger' : 'secondary'}">${q.status || 'Pendente'}</span></td><td class="text-center"><div class="btn-group border rounded shadow-sm"><button onclick="window.printFormalPDF('${q.id}')" class="btn btn-sm btn-light text-primary px-3" title="PDF"><i class="bi bi-file-earmark-pdf-fill"></i></button><button onclick="window.shareQuote('${q.id}')" class="btn btn-sm btn-light text-success px-3" title="Zap"><i class="bi bi-whatsapp"></i></button></div></td><td class="text-end"><div class="btn-group border rounded shadow-sm"><button onclick="window.updateQuoteStatus('${q.id}', 'Aprovado')" class="btn btn-sm ${q.status === 'Aprovado' ? 'btn-success text-white' : 'btn-light text-success'} px-2" title="Aprovar"><i class="bi bi-check-circle-fill"></i></button><button onclick="window.updateQuoteStatus('${q.id}', 'Recusado')" class="btn btn-sm ${q.status === 'Recusado' ? 'btn-danger text-white' : 'btn-light text-danger'} px-2" title="Recusar"><i class="bi bi-x-circle-fill"></i></button><button onclick="window.loadQuoteForEdit('${q.id}')" class="btn btn-sm btn-light text-primary px-2"><i class="bi bi-pencil-square"></i></button><button onclick="window.deleteDoc('quotes', '${q.id}')" class="btn btn-sm btn-light text-danger px-2"><i class="bi bi-trash3"></i></button></div></td></tr>`).join('');
+
+            const opts = '<option value="">Particular / Balcão</option>' + db.clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
             document.getElementById('client-select-pos').innerHTML = opts;
-            document.getElementById('report-select-client').innerHTML = opts + '<option value="null">Vendas sem Vínculo</option>';
         }
 
-        // --- DASHBOARD DE RELATÓRIO ---
         window.initDashboard = async () => {
             const filterMonth = document.getElementById('report-month-filter').value || new Date().toISOString().slice(0, 7);
-            document.getElementById('report-month-filter').value = filterMonth;
-            const s = await api('/sales/client/all'); db.sales = s || [];
-            const monthly = db.sales.filter(s => (s.sale_date || s.date).startsWith(filterMonth));
-            const grouped = {}; let totalMonth = 0; let totalToday = 0; const todayStr = new Date().toISOString().split('T')[0];
-            
-            monthly.forEach(s => {
-                const day = (s.sale_date || s.date).split('T')[0];
-                const val = parseFloat(s.total_amount || s.total || 0);
-                totalMonth += val; if (day === todayStr) totalToday += val;
-                if (!grouped[day]) grouped[day] = { total: 0, sales: [] };
-                grouped[day].total += val; grouped[day].sales.push(s);
-            });
-            
+            const filterType = document.getElementById('report-filter-type').value;
+            const s = await api('/sales/client/all'); db.sales = Array.isArray(s) ? s : [];
+
+            let monthly = db.sales.filter(v => (v.sale_date || v.date || "").startsWith(filterMonth));
+            if (filterType === 'debt') monthly = monthly.filter(v => (parseFloat(v.total_amount) - parseFloat(v.down_payment)) > 0.01);
+
+            let totalM = 0, totalToday = 0, totalDueToday = 0, totalPending = 0;
+            const today = new Date().toISOString().split('T')[0];
+            const alertsHtml = [];
+
+            document.getElementById('detailed-sales-list').innerHTML = monthly.map(v => {
+                const total = parseFloat(v.total_amount || v.total) || 0;
+                const sinal = parseFloat(v.down_payment) || 0;
+                const balance = total - sinal;
+                const d = (v.sale_date || v.date || "").split('T')[0];
+                const dueDate = v.due_date ? v.due_date.split('T')[0] : null;
+
+                totalM += total;
+                totalPending += balance;
+                if (d === today) totalToday += total;
+
+                let dueDateClass = 'text-muted';
+                if (balance > 0.01 && dueDate) {
+                    if (dueDate === today) {
+                        dueDateClass = 'text-warning fw-bold pulse-alert';
+                        totalDueToday++;
+                        alertsHtml.push(`<div class="alert alert-warning py-2 mb-2 shadow-sm d-flex justify-content-between align-items-center"><span><i class="bi bi-alarm me-2"></i><b>${v.client_name || 'Balcão'}</b> deve R$ ${balance.toFixed(2)} hoje!</span><button onclick="window.shareQuote('${v.id}')" class="btn btn-sm btn-warning"><i class="bi bi-whatsapp me-1"></i>Avisar</button></div>`);
+                    } else if (dueDate < today) {
+                        dueDateClass = 'text-danger fw-bold';
+                        alertsHtml.push(`<div class="alert alert-danger py-2 mb-2 shadow-sm d-flex justify-content-between align-items-center"><span><i class="bi bi-exclamation-triangle me-2"></i><b>${v.client_name || 'Balcão'}</b> em atraso!</span><button onclick="window.shareQuote('${v.id}')" class="btn btn-sm btn-danger"><i class="bi bi-whatsapp me-1"></i>Cobrar</button></div>`);
+                    }
+                }
+
+                return `<tr>
+                    <td><small>${d}</small></td>
+                    <td class="fw-bold font-monospace">#${String(v.id).split('-').pop()}</td>
+                    <td>${v.client_name ? `<b>${v.client_name}</b>` : '<span class="text-muted italic">Balcão</span>'}</td>
+                    <td class="text-end fw-bold">R$ ${total.toFixed(2)}</td>
+                    <td class="text-end text-success">R$ ${sinal.toFixed(2)}</td>
+                    <td class="text-end ${balance > 0.01 ? 'text-danger fw-bold' : 'text-muted'}">R$ ${balance.toFixed(2)}</td>
+                    <td class="text-center ${dueDateClass}">${dueDate ? dueDate.split('-').reverse().join('/') : '-'}</td>
+                    <td class="text-center">
+                        <div class="btn-group">
+                            <button onclick="window.reprintSale('${v.id}')" class="btn btn-sm text-primary p-0 me-2" title="Imprimir Cupão"><i class="bi bi-printer fs-5"></i></button>
+                            ${balance > 0.01 ? `<button onclick="window.loadSaleForEdit('${v.id}')" class="btn btn-sm text-warning p-0 me-2" title="Dar Baixa"><i class="bi bi-cash-stack fs-5"></i></button>` : ''}
+                            <button onclick="window.cancelSale('${v.id}')" class="btn btn-sm text-danger p-0"><i class="bi bi-arrow-counterclockwise fs-5"></i></button>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('') || '<tr><td colspan="8" class="text-center py-5 text-muted">Sem transações no período.</td></tr>';
+
+            document.getElementById('payment-alerts-container').innerHTML = alertsHtml.join('');
             document.getElementById('stat-today').innerText = `R$ ${totalToday.toFixed(2)}`;
-            document.getElementById('stat-month').innerText = `R$ ${totalMonth.toFixed(2)}`;
-            document.getElementById('stat-count').innerText = monthly.length;
-            document.getElementById('stat-ticket').innerText = `R$ ${(monthly.length > 0 ? totalMonth/monthly.length : 0).toFixed(2)}`;
-
-            const days = Object.keys(grouped).sort();
-            if (chartDaily) chartDaily.destroy();
-            chartDaily = new Chart(document.getElementById('chart-daily').getContext('2d'), {
-                type: 'line', data: { labels: days.map(d => d.split('-').reverse().join('/')), datasets: [{ label: 'Vendas', data: days.map(d => grouped[d].total), borderColor: '#6a0dad', backgroundColor: 'rgba(106, 13, 173, 0.05)', fill: true, tension: 0.4 }] },
-                options: { plugins: { legend: { display: false } } }
-            });
-
-            document.getElementById('daily-details-accordion').innerHTML = days.reverse().map((day) => {
-                const dayId = day.replace(/-/g, '');
-                return `<div class="accordion-item bg-transparent"><h2 class="accordion-header"><button class="accordion-button collapsed py-2 px-3 bg-white shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-${dayId}"><div class="w-100 d-flex justify-content-between pe-3 align-items-center"><span class="small"><b>${day.split('-').reverse().join('/')}</b></span><span class="badge bg-primary bg-opacity-10 text-primary fw-bold border">R$ ${grouped[day].total.toFixed(2)}</span></div></button></h2><div id="collapse-${dayId}" class="accordion-collapse collapse" data-bs-parent="#daily-details-accordion"><div class="accordion-body p-0 border-top"><table class="table table-sm table-hover m-0" style="font-size: 0.8rem;"><tbody>${grouped[day].sales.map(s => `<tr><td class="ps-3 py-2 text-muted">#${s.id}</td><td>${s.client_name || 'Particular'}</td><td class="text-end fw-bold">R$ ${parseFloat(s.total_amount).toFixed(2)}</td><td class="text-end pe-3"><div class="btn-group"><button onclick="window.reprintSale('${s.id}')" class="btn btn-sm btn-link text-primary p-1" title="Imprimir Cupom"><i class="bi bi-printer"></i></button><button onclick="window.cancelSale('${s.id}')" class="btn btn-sm btn-link text-danger p-1" title="Estornar Venda"><i class="bi bi-arrow-counterclockwise"></i></button></div></td></tr>`).join('')}</tbody></table></div></div></div>`}).join('') || '<p class="text-center py-4 text-muted small">Sem vendas registadas.</p>';
+            document.getElementById('stat-month').innerText = `R$ ${totalM.toFixed(2)}`;
+            document.getElementById('stat-due-today').innerText = totalDueToday;
+            document.getElementById('stat-pending').innerText = `R$ ${totalPending.toFixed(2)}`;
         };
 
-        window.renderClientHistory = async (cid) => {
-            const container = document.getElementById('report-content');
-            container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
-            const sales = await api(`/sales/client/${cid}`);
-            container.innerHTML = `<table class="table table-sm align-middle mb-0" style="font-size: 0.85rem;"><thead class="bg-slate-50 text-muted small fw-bold"><tr><th class="ps-2">Data</th><th class="text-end">Valor</th><th class="text-end pe-2">Ações</th></tr></thead><tbody>${sales.map(s => `<tr><td class="ps-2"><small>${new Date(s.sale_date || s.date).toLocaleDateString('pt-BR')}</small></td><td class="text-end fw-bold text-slate-700">R$ ${parseFloat(s.total_amount || s.total).toFixed(2)}</td><td class="text-end"><button onclick="window.reprintSale('${s.id}')" class="btn btn-sm text-primary p-0 me-1" title="Imprimir"><i class="bi bi-printer"></i></button><button onclick="window.cancelSale('${s.id}')" class="btn btn-sm text-danger p-0" title="Estornar"><i class="bi bi-arrow-counterclockwise"></i></button></td></tr>`).join('') || '<tr><td colspan="3" class="text-center py-4 text-muted">Sem registros.</td></tr>'}</tbody></table>`;
+        window.cancelSale = async (id) => {
+            const reason = prompt(`ESTORNO DE VENDA #${id}\nJustificativa:`);
+            if (!reason) return;
+            if (confirm("Confirmar estorno?")) {
+                const res = await api(`/sales/${id}`, 'DELETE', { reason });
+                if (res && !res.error) { showMessage("Venda estornada!"); await loadAllData(); window.initDashboard(); }
+            }
+        };
+
+        window.reprintSale = (id) => {
+            const v = db.sales.find(s => String(s.id) === String(id));
+            if (v) { window.printThermalReceipt(v); }
+        };
+
+        window.loadSaleForEdit = (id) => {
+            const v = db.sales.find(x => String(x.id) === String(id));
+            if (!v) return;
+            window.clearCart();
+            window.currentEditSaleId = v.id;
+            window.alreadyPaidAmount = parseFloat(v.down_payment) || 0;
+
+            document.getElementById('edit-sale-badge').classList.remove('d-none');
+            document.getElementById('edit-sale-id-text').innerText = '#' + String(v.id).split('-').pop();
+
+            cart = v.items.map(i => ({ id: i.product_id, name: i.product_name, qty: i.quantity, price: Number(i.price_unit) }));
+            document.getElementById('client-select-pos').value = v.client_id || "";
+            document.getElementById('discount-pos').value = v.discount || 0;
+            document.getElementById('sinal-pos').value = 0;
+            document.getElementById('label-payment-input').innerText = "Receber Agora (R$)";
+            document.getElementById('due-date-pos').value = v.due_date ? v.due_date.split('T')[0] : "";
+            window.updateCartUI();
+            bootstrap.Tab.getOrCreateInstance(document.getElementById('nav-vendas-link')).show();
+            showMessage("Carregado para dar baixa!");
+        };
+
+        window.printThermalReceipt = (v) => {
+            const labelArea = document.getElementById('label-print-area');
+            const container = document.getElementById('thermal-receipt');
+
+            labelArea.innerHTML = '';
+            container.innerHTML = "";
+
+            const total = parseFloat(v.total_amount || v.total) || 0;
+            const sinal = parseFloat(v.down_payment) || 0;
+            const balance = total - sinal;
+            const dateObj = new Date(v.sale_date || v.date || new Date());
+            const dateStr = dateObj.toLocaleDateString('pt-BR');
+            const timeStr = dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            const clientName = (v.client_name || 'Particular').toUpperCase().substring(0, 28);
+            const refNum = String(v.id).padStart(6, '0');
+
+            // Função para centralizar texto (58mm ≈ 32 caracteres)
+            const centerText = (text, width = 32) => {
+                const padding = Math.max(0, Math.floor((width - text.length) / 2));
+                return ' '.repeat(padding) + text;
+            };
+
+            // Função para direita
+            const alignRight = (label, value, width = 32) => {
+                const gap = width - label.length - value.length;
+                return label + ' '.repeat(Math.max(1, gap)) + value;
+            };
+
+            let html = `<div style="font-family: 'Courier New', monospace; white-space: pre-wrap; font-size: 11px; line-height: 1.3;">`;
+
+            // Header
+            html += `${centerText('KARMEM FARDAMENTOS', 32)}
+${centerText('ALTA COSTURA', 32)}
+${centerText('═══════════════════════════════', 32)}
+${centerText('CUPOM FISCAL', 32)}
+${centerText('═══════════════════════════════', 32)}
+
+NÚM: ${refNum}
+DATA: ${dateStr} ${timeStr}
+CLIENTE: ${clientName}
+
+───────────────────────────────`;
+
+            // Itens
+            if ((v.items || []).length > 0) {
+                html += `
+<b>PRODUTO       QTD    VALOR</b>
+───────────────────────────────`;
+
+                (v.items || []).forEach((i) => {
+                    const name = (i.product_name || i.name || "Item").toUpperCase().substring(0, 14);
+                    const qty = i.quantity || 1;
+                    const unitPrice = parseFloat(i.price_unit || i.price || 0);
+                    const subtotal = qty * unitPrice;
+
+                    const totalStr = `R$ ${subtotal.toFixed(2)}`;
+                    const line = `${name.padEnd(14)} ${qty}x ${totalStr.padStart(9)}`;
+                    html += `\n${line}`;
+                });
+                html += `\n───────────────────────────────`;
+            }
+
+            html += `
+${alignRight('TOTAL:', `R$ ${total.toFixed(2)}`, 32)}`;
+
+            if (sinal > 0) {
+                html += `
+${alignRight('PAGO:', `R$ ${sinal.toFixed(2)}`, 32)}
+${alignRight('SALDO:', `R$ ${balance.toFixed(2)}`, 32)}`;
+            }
+
+            html += `
+═══════════════════════════════`;
+
+            if (balance > 0 && sinal > 0) {
+                html += `
+${centerText('PENDENTE PAGAMENTO', 32)}`;
+            }
+
+            html += `
+${centerText('✓ OBRIGADO! ✓', 32)}
+${centerText('Volte sempre!', 32)}
+
+${centerText('Comprovante não fiscal', 32)}
+${centerText(dateStr + ' ' + timeStr, 32)}
+`;
+
+            html += `</div>`;
+
+            container.innerHTML = html;
+
+            setTimeout(() => {
+                window.print();
+                container.innerHTML = '';
+            }, 100);
+        };
+
+        window.addToCart = (id) => {
+            const p = db.products.find(x => Number(x.id) === Number(id)); if (!p) return;
+            const inC = cart.find(x => Number(x.id) === Number(id));
+            if (inC) inC.qty++; else cart.push({ ...p, qty: 1, price: Number(p.price) || 0 });
+            window.updateCartUI();
+        };
+
+        window.changeQty = (idx, delta) => {
+            cart[idx].qty += delta;
+            if (cart[idx].qty <= 0) cart.splice(idx, 1);
+            window.updateCartUI();
+        };
+
+        window.updateCartUI = () => {
+            const subtotal = cart.reduce((acc, i) => acc + ((Number(i.price) || 0) * (i.qty || 0)), 0);
+            const discountInput = Number(document.getElementById('discount-pos').value) || 0;
+            const discountType = document.getElementById('discount-type-pos').value;
+            let discount = discountType === 'percent' ? (subtotal * discountInput) / 100 : discountInput;
+            const paymentNow = Number(document.getElementById('sinal-pos').value) || 0;
+            const total_final = subtotal - discount;
+
+            document.getElementById('cart-subtotal').innerText = `R$ ${subtotal.toFixed(2)}`;
+            document.getElementById('cart-discount-val').innerText = `- R$ ${discount.toFixed(2)}`;
+            document.getElementById('cart-total-final').innerText = `R$ ${total_final.toFixed(2)}`;
+
+            const paidRow = document.getElementById('summary-already-paid-row');
+            if (window.currentEditSaleId) {
+                paidRow.classList.remove('d-none');
+                document.getElementById('cart-already-paid').innerText = `R$ ${window.alreadyPaidAmount.toFixed(2)}`;
+                document.getElementById('summary-payment-label').innerText = "Pagando Agora:";
+                document.getElementById('cart-sinal-val').innerText = `+ R$ ${paymentNow.toFixed(2)}`;
+            } else {
+                paidRow.classList.add('d-none');
+                document.getElementById('summary-payment-label').innerText = "Valor Pago (Sinal):";
+                document.getElementById('cart-sinal-val').innerText = `R$ ${paymentNow.toFixed(2)}`;
+            }
+
+            const totalPaidToDate = (window.currentEditSaleId ? window.alreadyPaidAmount : 0) + paymentNow;
+            const balance = total_final - totalPaidToDate;
+            document.getElementById('cart-balance').innerText = `R$ ${Math.max(0, balance).toFixed(2)}`;
+
+            document.getElementById('cart-items').innerHTML = cart.map((i, idx) => `
+                <div class="cart-item d-flex justify-content-between align-items-center">
+                    <div><b>${i.name}</b><br><small class="text-muted">Tam: ${i.size}</small></div>
+                    <div class="d-flex align-items-center gap-2"><button onclick="window.changeQty(${idx}, -1)" class="qty-btn">-</button><b>${i.qty}</b><button onclick="window.changeQty(${idx}, 1)" class="qty-btn">+</button></div>
+                </div>`).join('') || '<div class="text-center py-4">Checkout Vazio</div>';
+
+            const btnFinish = document.getElementById('btn-finish');
+            btnFinish.disabled = cart.length === 0;
+            btnFinish.innerText = window.currentEditSaleId ? "DAR BAIXA NO RESTANTE" : "FINALIZAR VENDA";
+            document.getElementById('btn-quote').disabled = cart.length === 0 || window.currentEditSaleId !== null;
+        };
+
+        window.handleTransaction = async (type) => {
+            const subtotal = cart.reduce((acc, i) => acc + ((Number(i.price) || 0) * (i.qty || 0)), 0);
+            const discountInput = Number(document.getElementById('discount-pos').value) || 0;
+            const discountType = document.getElementById('discount-type-pos').value;
+            let discount = discountType === 'percent' ? (subtotal * discountInput) / 100 : discountInput;
+            let paymentNow = Number(document.getElementById('sinal-pos').value) || 0;
+            const total_amount = subtotal - discount;
+            const dueDateRaw = document.getElementById('due-date-pos').value;
+            const clientIdRaw = document.getElementById('client-select-pos').value;
+
+            if (type === 'sale' && !window.currentEditSaleId && paymentNow === 0 && !dueDateRaw) {
+                paymentNow = total_amount;
+            }
+
+            const totalPaidToDate = (window.currentEditSaleId ? window.alreadyPaidAmount : 0) + paymentNow;
+
+            if (totalPaidToDate < (total_amount - 0.01) && !dueDateRaw) {
+                showMessage("Informe a DATA PREVISTA para o restante!", "error");
+                document.getElementById('due-date-pos').classList.add('required-pulse');
+                document.getElementById('due-date-pos').focus();
+                return;
+            }
+            document.getElementById('due-date-pos').classList.remove('required-pulse');
+
+            const btn = document.getElementById('btn-finish');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> A PROCESSAR...`;
+            btn.disabled = true;
+
+            const clientObj = db.clients.find(c => c.id == clientIdRaw);
+
+            const data = {
+                id: window.currentEditSaleId || (type === 'quote' && window.currentEditQuoteId ? window.currentEditQuoteId : (type === 'sale' ? 'KF-' : 'ORC-') + Date.now().toString().slice(-5)),
+                client_id: clientIdRaw ? Number(clientIdRaw) : null,
+                client_name: clientObj ? clientObj.name : 'Particular',
+                payment_method: document.getElementById('payment-method-pos').value,
+                subtotal: parseFloat(subtotal) || 0,
+                discount: parseFloat(discount) || 0,
+                down_payment: parseFloat(totalPaidToDate) || 0,
+                due_date: dueDateRaw || null,
+                total_amount: parseFloat(total_amount) || 0,
+                is_update: window.currentEditSaleId ? true : false,
+                items: cart.map(i => ({ id: i.id, name: i.name, qty: i.qty, price: i.price }))
+            };
+
+            const res = await api(type === 'sale' ? '/sales' : '/quotes', 'POST', data);
+
+            btn.innerHTML = originalHTML;
+            btn.disabled = false;
+
+            if (res && !res.error) {
+                if (type === 'sale' && !window.currentEditSaleId) window.printThermalReceipt(data);
+                showMessage(window.currentEditSaleId ? "Baixa efetuada com sucesso!" : (type === 'sale' ? "Venda efetuada!" : "Orçamento guardado!"));
+                window.clearCart();
+                await loadAllData();
+            } else {
+                const errMsg = res.error || "Verifique o ID ou ligação";
+                showMessage("Falha ao salvar: " + errMsg, "error");
+            }
         }
 
-        window.cancelSale = async (saleId) => {
-            const reason = prompt(`ESTORNO DE VENDA #${saleId}\nInforme o motivo do cancelamento:`);
-            if (reason === null || reason.trim() === "") return alert("Justificativa obrigatória!");
-            if (confirm(`Confirmar estorno da venda #${saleId}?\nOs artigos voltarão ao stock.`)) {
-                const res = await api(`/sales/${saleId}`, 'DELETE', { reason: reason });
-                if (res) { alert("Estorno processado!"); await loadAllData(); window.initDashboard(); if (document.getElementById('report-select-client').value) window.renderClientHistory(document.getElementById('report-select-client').value); }
+        window.clearCart = () => {
+            cart = [];
+            window.currentEditQuoteId = null;
+            window.currentEditSaleId = null;
+            window.alreadyPaidAmount = 0;
+            document.getElementById('edit-mode-badge').classList.add('d-none');
+            document.getElementById('edit-sale-badge').classList.add('d-none');
+            document.getElementById('due-date-pos').value = '';
+            document.getElementById('discount-pos').value = '';
+            document.getElementById('sinal-pos').value = '';
+            document.getElementById('label-payment-input').innerText = "Sinal (R$)";
+            window.updateCartUI();
+        };
+
+        window.editProd = (id) => { const p = db.products.find(x => Number(x.id) === Number(id)); document.getElementById('p-id').value = p.id; document.getElementById('p-name').value = p.name; document.getElementById('p-size').value = p.size; document.getElementById('p-price').value = p.price; document.getElementById('p-stock').value = p.stock; document.getElementById('form-product').scrollIntoView(); };
+        window.editCli = (id) => { const c = db.clients.find(x => Number(x.id) === Number(id)); document.getElementById('c-id').value = c.id; document.getElementById('c-name').value = c.name; document.getElementById('c-phone').value = c.phone; document.getElementById('c-cpf').value = c.cpf; document.getElementById('m-bust').value = c.m_bust; document.getElementById('m-waist').value = c.m_waist; document.getElementById('m-hips').value = c.m_hips; document.getElementById('m-shoulder').value = c.m_shoulder; document.getElementById('m-sleeve').value = c.m_sleeve; document.getElementById('form-client').scrollIntoView(); };
+        window.deleteDoc = async (col, id) => { if (confirm("Eliminar registo?")) { await api(`/${col}/${id}`, 'DELETE'); loadAllData(); } };
+        window.loadQuoteForEdit = (id) => { const q = db.quotes.find(x => String(x.id) === String(id)); if (!q) return; window.clearCart(); window.currentEditQuoteId = q.id; document.getElementById('edit-mode-badge').classList.remove('d-none'); cart = q.items.map(i => ({ id: i.product_id, name: i.product_name, qty: i.quantity, price: Number(i.price_unit) })); document.getElementById('client-select-pos').value = q.client_id || ""; window.updateCartUI(); bootstrap.Tab.getOrCreateInstance(document.getElementById('nav-vendas-link')).show(); };
+
+        document.getElementById('form-product').onsubmit = async (e) => { e.preventDefault(); const pId = document.getElementById('p-id').value; const body = { id: pId, name: document.getElementById('p-name').value, size: document.getElementById('p-size').value, price: Number(document.getElementById('p-price').value), stock: Number(document.getElementById('p-stock').value) }; const res = await api('/products', 'POST', body); if (res && !res.error) { e.target.reset(); document.getElementById('p-id').value = ''; await loadAllData(); if (!pId) window.generateLabel(res.id); showMessage("Artigo guardado!"); } };
+        document.getElementById('form-client').onsubmit = async (e) => { e.preventDefault(); const body = { id: document.getElementById('c-id').value, name: document.getElementById('c-name').value, phone: document.getElementById('c-phone').value, cpf: document.getElementById('c-cpf').value, m_bust: document.getElementById('m-bust').value, m_waist: document.getElementById('m-waist').value, m_hips: document.getElementById('m-hips').value, m_shoulder: document.getElementById('m-shoulder').value, m_sleeve: document.getElementById('m-sleeve').value }; const res = await api('/clients', 'POST', body); if (res && !res.error) { e.target.reset(); document.getElementById('c-id').value = ''; loadAllData(); showMessage("Ficha técnica guardada!"); } };
+
+        window.generateLabel = (productId) => {
+            const product = db.products.find(p => Number(p.id) === Number(productId));
+            if (!product) {
+                showMessage("Produto não encontrado!", "error");
+                return;
             }
-        };
 
-        window.reprintSale = (saleId) => {
-            const sale = db.sales.find(s => String(s.id) === String(saleId));
-            if (sale) { 
-                document.getElementById('label-print-area').innerHTML = '';
-                window.printThermalReceipt({ id: sale.id, client_id: sale.client_id, subtotal: sale.subtotal, discount: sale.discount, total: sale.total_amount || sale.total, sale_date: sale.sale_date, items: sale.items || [] }); 
-            }
-        };
+            // Preencher dados da etiqueta
+            document.getElementById('label-name').innerText = product.name.toUpperCase();
+            document.getElementById('label-size').innerText = product.size.toUpperCase();
+            document.getElementById('label-id').innerText = String(product.id).padStart(3, '0');
+            document.getElementById('label-price').innerText = `R$ ${(Number(product.price) || 0).toFixed(2)}`;
 
-        // --- MOTOR DE PDF DE LUXO / BOUTIQUE (ELEGANTE E REFINADO) ---
-        window.printFormalPDF = async (id) => {
-            const q = db.quotes.find(x => x.id == id); if (!q) return;
-            const client = db.clients.find(c => String(c.id) === String(q.client_id));
-            const total = parseFloat(q.total || q.total_amount || 0).toFixed(2);
-            
-            const pdfHtml = `
-                <div style="width: 100%; padding: 60px 50px; background: #fff; font-family: 'Inter', sans-serif; color: #1e293b;">
-                    <div style="max-width: 800px; margin: 0 auto; position: relative; border: 1px solid #f1f5f9; padding: 50px; min-height: 1000px; display: flex; flex-direction: column; background: #ffffff;">
-                        <div style="position: absolute; left: 0; top: 0; width: 4px; height: 100%; background: #6a0dad; opacity: 0.7;"></div>
-                        <div style="text-align: center; margin-bottom: 70px;">
-                            <h1 style="font-family: 'Playfair Display', serif; font-size: 32px; color: #6a0dad; margin: 0; text-transform: uppercase; font-weight: 800; letter-spacing: 3px; line-height: 1;">Karmem Fardamentos</h1>
-                            <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 6px; color: #94a3b8; margin-top: 15px; font-weight: 600;">Alta Confecção & Atelier de Luxo</p>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 60px; border-bottom: 1px solid #f8fafc; padding-bottom: 35px;">
-                            <div style="width: 45%;">
-                                <span style="font-size: 9px; font-weight: 800; color: #6a0dad; display: block; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1.5px;">Cliente:</span>
-                                <b style="font-size: 16px; font-family: 'Playfair Display', serif; color: #0f172a; display: block; margin-bottom: 5px;">${(client?.name || q.client_name || 'Particular').toUpperCase()}</b>
-                                <div style="font-size: 12px; color: #64748b; line-height: 1.6;">WhatsApp: ${client?.phone || 'N/A'}<br>Endereço: ${client?.address || 'N/A'}</div>
-                            </div>
-                            <div style="width: 45%; text-align: right;">
-                                <span style="font-size: 9px; font-weight: 800; color: #6a0dad; display: block; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1.5px;">Orçamento:</span>
-                                <b style="font-size: 14px; color: #0f172a; display: block; margin-bottom: 5px;">REF: ${q.id.split('-').pop()}</b>
-                                <div style="font-size: 12px; color: #64748b; line-height: 1.6;">Emissão: ${q.date.split(',')[0]}<br>Validade: 7 dias úteis</div>
-                            </div>
-                        </div>
-                        <div style="flex-grow: 1;">
-                            <table style="width: 100%; border-collapse: collapse;">
-                                <thead><tr style="border-bottom: 1.5px solid #0f172a;"><th style="padding: 15px 5px; font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; text-align: left; letter-spacing: 1.5px;">Artigo / Descrição</th><th style="padding: 15px 5px; font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; text-align: center; width: 60px;">Qtd</th><th style="padding: 15px 5px; font-size: 10px; font-weight: 800; text-transform: uppercase; color: #64748b; text-align: right; width: 130px;">Subtotal</th></tr></thead>
-                                <tbody>${(q.items || []).map(i => `<tr style="border-bottom: 1px solid #f8fafc;"><td style="padding: 25px 5px; font-size: 13px; color: #0f172a;"><b>${(i.product_name || i.name).toUpperCase()}</b><br><span style="font-size: 10px; color: #94a3b8; font-weight: 500;">Tamanho: ${i.size || 'N/A'}</span></td><td style="padding: 25px 5px; font-size: 13px; text-align: center; color: #475569;">${i.quantity || i.qty}</td><td style="padding: 25px 5px; font-size: 13px; text-align: right; font-weight: 700; color: #0f172a;">R$ ${((i.quantity || i.qty) * (i.price_unit || i.price)).toFixed(2)}</td></tr>`).join('')}</tbody>
-                            </table>
-                        </div>
-                        <div style="display: flex; justify-content: flex-end; margin-top: 50px;"><div style="width: 300px; padding: 30px; background: #fdfcff; border: 1px solid #e2e8f0; border-radius: 20px;"><div style="display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 12px; color: #94a3b8; font-weight: 600;"><span style="letter-spacing: 1px;">SOMA BRUTA</span><span>R$ ${parseFloat(q.subtotal || total).toFixed(2)}</span></div><div style="display: flex; justify-content: space-between; border-top: 2px solid #6a0dad; padding-top: 25px; color: #6a0dad;"><b style="font-size: 13px; align-self: center; font-weight: 900; letter-spacing: 1px;">TOTAL</b><b style="font-size: 28px; font-family: 'Playfair Display', serif; font-weight: 900;">R$ ${total}</b></div></div></div>
-                        <div style="margin-top: 100px; display: flex; justify-content: space-between; padding: 0 40px;"><div style="width: 240px; text-align: center; border-top: 1px solid #0f172a; padding-top: 12px; font-size: 10px; color: #0f172a; text-transform: uppercase; font-weight: 700; letter-spacing: 1.5px;">Atelier Karmem</div><div style="width: 240px; text-align: center; border-top: 1px solid #0f172a; padding-top: 12px; font-size: 10px; color: #0f172a; text-transform: uppercase; font-weight: 700; letter-spacing: 1.5px;">Aceite do Cliente</div></div>
-                        <div style="margin-top: 50px; text-align: center; font-size: 10px; color: #cbd5e1; font-style: italic; letter-spacing: 0.5px;">Elegância e Qualidade em cada detalhe. Karmem Fardamentos agradece.</div>
-                    </div>
-                </div>`;
-            await html2pdf().from(pdfHtml).set({ margin: 0, filename: `Karmem_ORC${q.id.split('-').pop()}.pdf`, html2canvas: { scale: 3, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).save();
-        };
+            // Gerar QR Code
+            const qrcodeContainer = document.getElementById('qrcode');
+            qrcodeContainer.innerHTML = '';
+            new QRCode(qrcodeContainer, {
+                text: `KARMEM-${product.id}-${product.size}`,
+                width: 60,
+                height: 60,
+                colorDark: '#6a0dad',
+                colorLight: '#ffffff'
+            });
 
-        // --- MOTOR DE CUPÃO TÉRMICO (FONTE AJUSTADA) ---
-        window.printThermalReceipt = (data) => {
-            const container = document.getElementById('thermal-receipt');
-            const now = new Date(data.sale_date || data.date || Date.now());
-            const client = db.clients.find(c => String(c.id) === String(data.client_id)) || { name: 'CONSUMIDOR FINAL' };
-            
-            document.getElementById('label-print-area').innerHTML = '';
-            
-            let html = `<div style="text-align:center; margin-top:0; padding-top:0;"><b style="font-size:15px; display:block;">KARMEM FARDAMENTOS</b><span style="font-size:10px;">ALTA CONFECCAO & ATELIER</span><br><span style="font-size:9px;">PERNAMBUCO - BRASIL</span><br>----------------------------<br><b style="font-size:11px;">CUPOM NAO FISCAL</b></div><div class="receipt-sep"></div>REF: ${data.id}<br>DATA: ${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR')}<br>CLI: ${client.name.toUpperCase().substring(0, 20)}<br><div class="receipt-sep"></div><b style="font-size:11px;">DESCRIÇÃO     QTD    TOTAL</b><br>`;
-            if(data.items && data.items.length > 0) {
-                data.items.forEach(i => {
-                    const name = (i.product_name || i.name).toUpperCase().substring(0, 12).padEnd(12, '.');
-                    const qty = (i.qty || i.quantity).toString().padStart(3, ' ');
-                    const price = parseFloat(i.price || i.price_unit);
-                    const sub = ( (i.qty || i.quantity) * price ).toFixed(2).padStart(8, ' ');
-                    html += `<div style="font-size:12px;" class="receipt-row"><span>${name}</span><span>${qty}</span><span>${sub}</span></div>`;
-                });
-            } else { html += `<div style="text-align:center;">DETALHES REGISTADOS</div>`; }
-            html += `<div class="receipt-sep"></div><div class="receipt-row"><span>SUBTOTAL:</span><span>R$ ${parseFloat(data.subtotal || data.total).toFixed(2)}</span></div><div style="font-size:13px; font-weight:900; margin-top: 3px;" class="receipt-row"><span>TOTAL:</span><span>R$ ${parseFloat(data.total).toFixed(2)}</span></div><div class="receipt-sep"></div><div style="text-align:center; margin-top:6px; font-weight:700; font-size:9px;">OBRIGADO PELA PREFERÊNCIA!<br>@fardamentoskarmem</div><br>.`;
-            container.innerHTML = html;
-            window.print();
-        };
-
-        window.shareQuote = (id) => {
-            const q = db.quotes.find(x => x.id == id); if (!q) return;
-            const client = db.clients.find(c => String(c.id) === String(q.client_id));
-            let msg = `🌟 *KARMEM FARDAMENTOS* 🌟\nOlá *${client?.name || 'Cliente'}*,\nSegue orçamento Ref: ORC-${q.id.split('-').pop()}\n💰 *TOTAL: R$ ${parseFloat(q.total).toFixed(2)}* 🙏`;
-            window.open(`https://wa.me/55${(client?.phone || '').replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`, '_blank');
-        };
-
-        window.generateLabel = (id) => {
-            const p = db.products.find(x => x.id == id); if (!p) return;
-            document.getElementById('label-name').innerText = p.name.toUpperCase();
-            document.getElementById('label-size').innerText = p.size;
-            document.getElementById('label-id').innerText = p.id;
-            document.getElementById('label-price').innerText = `R$ ${parseFloat(p.price).toFixed(2)}`;
-            const qrContainer = document.getElementById('qrcode'); qrContainer.innerHTML = "";
-            new QRCode(qrContainer, { text: p.id.toString(), width: 100, height: 100, colorDark : "#000000", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.H });
-            new bootstrap.Modal(document.getElementById('modal-label')).show();
+            // Mostrar modal
+            const modal = new bootstrap.Modal(document.getElementById('modal-label'));
+            modal.show();
         };
 
         window.printCurrentLabel = () => {
-            document.getElementById('thermal-receipt').innerHTML = '';
-            const labelContent = document.getElementById('label-wrapper-modal').innerHTML;
-            const printArea = document.getElementById('label-print-area');
-            printArea.innerHTML = labelContent;
-            printArea.style.display = "block";
-            window.print();
-            printArea.style.display = "none";
+            const labelArea = document.getElementById('label-print-area');
+            const thermalReceipt = document.getElementById('thermal-receipt');
+            const labelPreview = document.getElementById('label-preview').cloneNode(true);
+
+            // Limpar ambos os containers
+            labelArea.innerHTML = '';
+            thermalReceipt.innerHTML = '';
+
+            // Preparar apenas a etiqueta
+            labelArea.appendChild(labelPreview);
+            labelArea.style.display = 'block';
+
+            setTimeout(() => {
+                window.print();
+                labelArea.innerHTML = '';
+                labelArea.style.display = 'none';
+            }, 100);
         };
 
-        window.updateQuoteStatus = async (id, newStatus) => { await api(`/quotes/${id}/status`, 'POST', { status: newStatus }); if (newStatus === 'Aprovado') await window.printFormalPDF(id); loadAllData(); };
-        window.addToCart = (id) => { const p = db.products.find(x => x.id == id); if (!p) return; const inCart = cart.find(x => x.id == id); if (inCart) inCart.qty++; else cart.push({ ...p, qty: 1, price: parseFloat(p.price) }); window.updateCartUI(); document.getElementById('search-pos').value = ''; window.render(); };
-        window.updateCartUI = () => {
-            let s = 0; document.getElementById('cart-items').innerHTML = cart.map((item, i) => { const sub = item.price * item.qty; s += sub; return `<div class="cart-item"><div class="d-flex justify-content-between"><b>${item.name}</b><button onclick="cart.splice(${i},1);window.updateCartUI()" class="btn btn-sm text-danger p-0 border-0"><i class="bi bi-x-circle-fill"></i></button></div><div class="d-flex justify-content-between small text-muted"><span>Tam: ${item.size} x${item.qty}</span><span class="fw-bold text-primary">R$ ${sub.toFixed(2)}</span></div></div>`; }).join('') || '<div class="text-center py-5 text-slate-300 small">Checkout Vazio</div>';
-            document.getElementById('cart-total').innerText = `R$ ${s.toFixed(2)}`; document.getElementById('btn-finish').disabled = document.getElementById('btn-quote').disabled = cart.length === 0;
-        }
-
-        window.handleTransaction = async (type) => {
-            const cid = document.getElementById('client-select-pos').value;
-            const subtotal = cart.reduce((s, i) => s + (i.price * i.qty), 0);
-            const data = { id: (type === 'quote' && window.currentEditQuoteId) ? window.currentEditQuoteId : (type==='sale'?'KF-':'ORC-') + Date.now().toString().slice(-5), client_id: cid || null, paymentMethod: document.getElementById('payment-method-pos').value, subtotal, discount: 0, total: subtotal, items: cart };
-            const res = await api(type === 'sale' ? '/sales' : '/quotes', 'POST', data); 
-            if (res) { 
-                if (type === 'sale' && confirm("Concluído! Imprimir Cupom?")) {
-                    window.printThermalReceipt(data); 
-                }
-                window.currentEditQuoteId = null; document.getElementById('edit-mode-badge').classList.add('d-none'); cart = []; window.updateCartUI(); loadAllData(); 
+        window.printFormalPDF = (quoteId) => {
+            const quote = db.quotes.find(q => String(q.id) === String(quoteId));
+            if (!quote) {
+                showMessage("Orçamento não encontrado!", "error");
+                return;
             }
-        }
 
-        window.editProd = (id) => { const p = db.products.find(x => x.id == id); document.getElementById('p-id').value = p.id; document.getElementById('p-name').value = p.name; document.getElementById('p-size').value = p.size; document.getElementById('p-price').value = p.price; document.getElementById('p-stock').value = p.stock; document.getElementById('form-product').scrollIntoView({ behavior: 'smooth' }); };
-        window.editCli = (id) => { const c = db.clients.find(x => x.id == id); document.getElementById('c-id').value = c.id; document.getElementById('c-name').value = c.name; document.getElementById('c-phone').value = c.phone; document.getElementById('c-email').value = c.email; document.getElementById('c-cpf').value = c.cpf; document.getElementById('c-address').value = c.address; document.getElementById('m-bust').value = c.m_bust; document.getElementById('m-waist').value = c.m_waist; document.getElementById('m-hips').value = c.m_hips; document.getElementById('m-shoulder').value = c.m_shoulder; document.getElementById('m-sleeve').value = c.m_sleeve; document.getElementById('m-length-up').value = c.m_length_up; document.getElementById('m-length-down').value = c.m_length_down; document.getElementById('c-notes').value = c.notes; document.getElementById('form-client').scrollIntoView({ behavior: 'smooth' }); };
-        window.deleteDoc = async (col, id) => { if (confirm("Deseja mesmo eliminar?")) { await api(`/${col}/${id}`, 'DELETE'); loadAllData(); } };
-        window.loadQuoteForEdit = (id) => { const q = db.quotes.find(x => x.id == id); if (!q) return; window.currentEditQuoteId = q.id; document.getElementById('edit-mode-badge').classList.remove('d-none'); cart = q.items.map(i => ({ id: i.product_id, name: i.product_name, qty: i.quantity, price: parseFloat(i.price_unit) })); document.getElementById('client-select-pos').value = q.client_id || ""; window.updateCartUI(); bootstrap.Tab.getOrCreateInstance(document.querySelector('a[href="#tab-vendas"]')).show(); };
-        window.clearCart = () => { cart = []; window.currentEditQuoteId = null; document.getElementById('edit-mode-badge').classList.add('d-none'); window.updateCartUI(); };
-        
-        document.getElementById('form-product').onsubmit = async (e) => { e.preventDefault(); const pId = document.getElementById('p-id').value; const body = { id: pId, name: document.getElementById('p-name').value, size: document.getElementById('p-size').value, price: parseFloat(document.getElementById('p-price').value), stock: parseInt(document.getElementById('p-stock').value) }; const res = await api('/products', 'POST', body); if (res) { e.target.reset(); document.getElementById('p-id').value = ''; await loadAllData(); if (!pId) window.generateLabel(res.id); } };
-        document.getElementById('form-client').onsubmit = async (e) => { e.preventDefault(); const body = { id: document.getElementById('c-id').value, name: document.getElementById('c-name').value, phone: document.getElementById('c-phone').value, email: document.getElementById('c-email').value, cpf: document.getElementById('c-cpf').value, address: document.getElementById('c-address').value, m_bust: document.getElementById('m-bust').value, m_waist: document.getElementById('m-waist').value, m_hips: document.getElementById('m-hips').value, m_shoulder: document.getElementById('m-shoulder').value, m_sleeve: document.getElementById('m-sleeve').value, m_length_up: document.getElementById('m-length-up').value, m_length_down: document.getElementById('m-length-down').value, notes: document.getElementById('c-notes').value }; const res = await api('/clients', 'POST', body); if (res) { e.target.reset(); document.getElementById('c-id').value=''; loadAllData(); alert("Ficha técnica guardada!"); } };
+            const dateStr = (quote.created_at || quote.date || "").split('T')[0] || new Date().toLocaleDateString('pt-BR');
+            const total = parseFloat(quote.total_amount || quote.total) || 0;
+            const discount = parseFloat(quote.discount) || 0;
+
+            const element = document.createElement('div');
+            element.innerHTML = `
+                <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
+                    <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #6a0dad; padding-bottom: 15px;">
+                        <h1 style="color: #6a0dad; margin: 0; font-size: 28px;">KARMEM FARDAMENTOS</h1>
+                        <p style="color: #666; margin: 5px 0; font-size: 12px;">ALTA COSTURA & ATELIER DE LUXO</p>
+                        <p style="color: #666; margin: 5px 0; font-size: 11px;">Rua Siqueira Campos, 88</p>
+                    </div>
+
+                    <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                        <h2 style="color: #6a0dad; margin: 0 0 10px 0; font-size: 16px;">ORÇAMENTO Nº ${String(quote.id).split('-').pop()}</h2>
+                        <p style="margin: 5px 0; font-size: 12px;"><strong>Data:</strong> ${dateStr}</p>
+                        <p style="margin: 5px 0; font-size: 12px;"><strong>Cliente:</strong> ${quote.client_name || 'Particular'}</p>
+                        <p style="margin: 5px 0; font-size: 12px;"><strong>Status:</strong> ${quote.status}</p>
+                    </div>
+
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px;">
+                        <thead>
+                            <tr style="background: #6a0dad; color: white;">
+                                <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Artigo</th>
+                                <th style="padding: 10px; text-align: center; border: 1px solid #ddd;">Qtd</th>
+                                <th style="padding: 10px; text-align: right; border: 1px solid #ddd;">Preço Unit.</th>
+                                <th style="padding: 10px; text-align: right; border: 1px solid #ddd;">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${(quote.items || []).map(item => {
+                const unitPrice = Number(item.price_unit || item.price) || 0;
+                const subtotal = unitPrice * item.quantity;
+                return `<tr style="border: 1px solid #ddd;">
+                                    <td style="padding: 8px; border: 1px solid #ddd;">${item.product_name || item.name}</td>
+                                    <td style="padding: 8px; text-align: center; border: 1px solid #ddd;">${item.quantity}</td>
+                                    <td style="padding: 8px; text-align: right; border: 1px solid #ddd;">R$ ${unitPrice.toFixed(2)}</td>
+                                    <td style="padding: 8px; text-align: right; border: 1px solid #ddd;"><strong>R$ ${subtotal.toFixed(2)}</strong></td>
+                                </tr>`;
+            }).join('')}
+                        </tbody>
+                    </table>
+
+                    <div style="text-align: right; margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; font-size: 12px;">
+                        <p style="margin: 5px 0;"><strong>Subtotal:</strong> R$ ${((total + discount) || 0).toFixed(2)}</p>
+                        ${discount > 0 ? `<p style="margin: 5px 0; color: #dc3545;"><strong>Desconto:</strong> - R$ ${discount.toFixed(2)}</p>` : ''}
+                        <p style="margin: 10px 0; font-size: 14px; color: #6a0dad; border-top: 1px solid #ddd; padding-top: 10px;"><strong>TOTAL: R$ ${total.toFixed(2)}</strong></p>
+                    </div>
+
+                    <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #6a0dad;">
+                        <p style="margin: 10px 0; font-weight: bold; font-size: 11px;">ASSINATURAS DE CONFIRMAÇÃO:</p>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 30px;">
+                            <div style="text-align: center;">
+                                <p style="margin-bottom: 40px; font-size: 10px; min-height: 30px; border-bottom: 1px solid #000;">&nbsp;</p>
+                                <p style="margin: 5px 0; font-size: 10px;"><strong>Cliente / Responsável</strong></p>
+                                <p style="margin: 2px 0; font-size: 9px; color: #666;">${quote.client_name || 'Particular'}</p>
+                            </div>
+                            <div style="text-align: center;">
+                                <p style="margin-bottom: 40px; font-size: 10px; min-height: 30px; border-bottom: 1px solid #000;">&nbsp;</p>
+                                <p style="margin: 5px 0; font-size: 10px;"><strong>Assinatura Empresa</strong></p>
+                                <p style="margin: 2px 0; font-size: 9px; color: #666;">Karmem Fardamentos</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; color: #666; font-size: 10px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
+                        <p>Obrigado pela atenção! Este orçamento é válido por 30 dias.</p>
+                        <p>Para dúvidas, entre em contacto conosco.</p>
+                        <p style="margin-top: 10px; font-size: 9px; color: #999;">Documento gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</p>
+                    </div>
+                </div>
+            `;
+
+            const opt = {
+                margin: 10,
+                filename: `ORC-${String(quote.id).split('-').pop()}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+            };
+
+            html2pdf().set(opt).from(element).save();
+            showMessage("PDF gerado com sucesso!");
+        };
+
+        window.shareQuote = (id) => {
+            const quote = db.quotes.find(q => String(q.id) === String(id));
+            const sale = db.sales.find(s => String(s.id) === String(id));
+            const record = quote || sale;
+
+            if (!record) {
+                showMessage("Documento não encontrado!", "error");
+                return;
+            }
+
+            // Puxar telefone do cliente
+            const clientName = record.client_name || 'Prezado Cliente';
+            const phone = record.client_phone || record.phone || '5511999999999';
+            const cleanPhone = phone.replace(/\D/g, '');
+            const docType = quote ? 'Orçamento' : 'Venda';
+            const docRef = String(record.id).split('-').pop();
+            const total = (parseFloat(record.total_amount || record.total) || 0).toFixed(2);
+
+            const message = `Olá *${clientName}*! 👋\n\nSeu ${docType} nº ${docRef} da *Karmem Fardamentos* está pronto!\n\n💰 *Valor Total:* R$ ${total}\n\nPara confirmar ou esclarecer dúvidas, entre em contacto conosco.\n\nObrigado! 😊`;
+
+            window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank');
+        };
+
+        window.updateQuoteStatus = async (id, status) => {
+            const quote = db.quotes.find(q => String(q.id) === String(id));
+            if (!quote) {
+                showMessage("Orçamento não encontrado!", "error");
+                return;
+            }
+
+            if (quote.status === status) {
+                showMessage(`Orçamento já está ${status.toLowerCase()}!`);
+                return;
+            }
+
+            // Apenas atualiza localmente (sem enviar ao servidor)
+            quote.status = status;
+            showMessage(`✓ Orçamento marcado como ${status.toLowerCase()}!`);
+            window.render();
+
+            // Log para você verificar a mudança
+            console.log(`Status do orçamento ${id} atualizado para: ${status}`, quote);
+        };
 
         window.onload = loadAllData;
     </script>
 </body>
+
 </html>
