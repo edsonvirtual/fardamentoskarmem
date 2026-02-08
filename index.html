@@ -621,7 +621,21 @@
     <div id="thermal-receipt"></div>
 
     <script>
-        const API_URL = 'http://localhost:3000/api';
+        // Detecção automática do ambiente (Dev/Produção)
+        const API_URL = (() => {
+            const hostname = window.location.hostname;
+            const isDev = hostname === 'localhost' || hostname === '127.0.0.1';
+            const isLocal = hostname.includes('192.168') || hostname.includes('10.0');
+
+            if (isDev || isLocal) {
+                return 'http://localhost:3000/api';
+            } else {
+                // Produção (Render/etc)
+                return `${window.location.origin}/api`;
+            }
+        })();
+
+        console.log(`📡 API URL: ${API_URL}`);
 
         let db = { products: [], clients: [], sales: [], quotes: [] };
         let cart = [];

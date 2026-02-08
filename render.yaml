@@ -1,0 +1,17 @@
+# Render YAML para deploy automático
+# Substitua <...> pelos valores reais antes de fazer deploy
+services:
+  - type: web
+    name: karmem-fardamentos
+    env: node
+    plan: free
+    repo: <seu-repositorio-git-url> # ex: https://github.com/usuario/repo
+    branch: main
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        value: "${DATABASE_URL}" # configure o segredo no painel do Render
+    autoDeploy: true

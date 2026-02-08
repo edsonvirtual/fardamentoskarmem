@@ -2,18 +2,17 @@ const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 // Configuração do Banco de Dados PostgreSQL
-// Certifique-se de que os dados de acesso (user, password, database) estão corretos para o seu ambiente local
+// Suporta tanto variáveis de ambiente quanto string de conexão (Neon)
 const pool = new Pool({
-    user: 'postgres', // Utilizador padrão do Postgres
-    host: 'localhost',
-    database: 'karmem_db', // Nome da base de dados criada no pgAdmin
-    password: '1234', // A sua senha do PostgreSQL
-    port: 5432,
+    connectionString: process.env.DATABASE_URL ||
+        `postgres://${process.env.DB_USER || 'postgres'}:${process.env.DB_PASSWORD || '1234'}@${process.env.DB_HOST || 'localhost'}:${process.env.DB_PORT || 5432}/${process.env.DB_NAME || 'karmem_db'}`,
+    ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false, // SSL para conexões externas (Neon)
 });
 
 app.use(cors());
@@ -24,10 +23,10 @@ app.use(express.static('.')); // Serve o ficheiro index.html na mesma pasta
 // ROTA DE VENDAS (A MAIS IMPORTANTE)
 // ==========================================
 app.post('/api/sales', async (req, res) => {
-    const { 
-        id, client_id, payment_method, subtotal, 
-        discount, down_payment, due_date, 
-        total_amount, items, is_update 
+    const {
+        id, client_id, payment_method, subtotal,
+        discount, down_payment, due_date,
+        total_amount, items, is_update
     } = req.body;
 
     const client = await pool.connect();
@@ -60,7 +59,7 @@ app.post('/api/sales', async (req, res) => {
             // LÓGICA DE INSERÇÃO (VENDA NOVA):
             await client.query(
                 `INSERT INTO sales (id, client_id, payment_method, subtotal, discount, down_payment, due_date, total_amount) 
-                 VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`, 
+                 VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
                 [id, client_id, payment_method, subtotal, discount, down_payment, due_date, total_amount]
             );
 
@@ -71,7 +70,7 @@ app.post('/api/sales', async (req, res) => {
                     [id, item.id, item.name, item.qty, item.price]
                 );
                 await client.query(
-                    'UPDATE products SET stock = stock - $1 WHERE id = $2', 
+                    'UPDATE products SET stock = stock - $1 WHERE id = $2',
                     [item.qty, item.id]
                 );
             }
@@ -79,12 +78,12 @@ app.post('/api/sales', async (req, res) => {
 
         await client.query('COMMIT');
         res.json({ success: true, message: is_update ? 'Baixa efetuada' : 'Venda registada' });
-    } catch (e) { 
-        await client.query('ROLLBACK'); 
+    } catch (e) {
+        await client.query('ROLLBACK');
         console.error("Erro no Processamento de Venda:", e.message);
-        res.status(500).json({ error: e.message }); 
-    } finally { 
-        client.release(); 
+        res.status(500).json({ error: e.message });
+    } finally {
+        client.release();
     }
 });
 
@@ -134,14 +133,14 @@ app.post('/api/clients', async (req, res) => {
         if (id) {
             await pool.query(
                 `UPDATE clients SET name=$1, phone=$2, cpf=$3, m_bust=$4, m_waist=$5, m_hips=$6, m_shoulder=$7, m_sleeve=$8 
-                 WHERE id=$9`, 
+                 WHERE id=$9`,
                 [name, phone, cpf, m_bust, m_waist, m_hips, m_shoulder, m_sleeve, id]
             );
             res.json({ id });
         } else {
             const result = await pool.query(
                 `INSERT INTO clients (name, phone, cpf, m_bust, m_waist, m_hips, m_shoulder, m_sleeve) 
-                 VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id`, 
+                 VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id`,
                 [name, phone, cpf, m_bust, m_waist, m_hips, m_shoulder, m_sleeve]
             );
             res.json(result.rows[0]);
